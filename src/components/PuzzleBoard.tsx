@@ -111,8 +111,13 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
     source: 'tray' | 'grid'
   ) => {
     if (isCompleted) return; // Game already won
-    e.preventDefault();
     soundManager.playClick();
+
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // Ignore
+    }
 
     const rect = e.currentTarget.getBoundingClientRect();
     const offsetX = e.clientX - rect.left;
@@ -402,7 +407,7 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
           {/* Puzzle Board Grid (Fixed 1:1 Aspect Ratio) */}
           <div
             ref={boardRef}
-            className="w-full max-w-[420px] sm:max-w-[460px] aspect-square bg-[#1A120B] p-2.5 sm:p-3 border-4 border-[#4A3322] shadow-[6px_6px_0px_#110B06] relative touch-none"
+            className="w-full max-w-[420px] sm:max-w-[460px] aspect-square bg-[#1A120B] p-2.5 sm:p-3 border-4 border-[#4A3322] shadow-[6px_6px_0px_#110B06] relative"
           >
             {/* Watermark Background */}
             <div className="absolute inset-2.5 sm:inset-3 overflow-hidden opacity-10 pointer-events-none">
@@ -444,7 +449,7 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                     {pieceInSlot && (
                       <div
                         onPointerDown={(e) => handlePointerDown(e, pieceInSlot, 'grid')}
-                        className={`w-full h-full overflow-hidden cursor-grab active:cursor-grabbing relative ${
+                        className={`w-full h-full overflow-hidden cursor-grab active:cursor-grabbing relative touch-none ${
                           justSnappedPieceId === pieceInSlot.id ? 'ring-2 ring-[#FFE17D]' : ''
                         }`}
                       >

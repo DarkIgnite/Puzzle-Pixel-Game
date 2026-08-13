@@ -192,7 +192,7 @@ export default function App() {
   const activePhoto = getPhotoForLevel(activeLevel, photos);
 
   return (
-    <div className="min-h-screen bg-[#111822] text-[#FFE17D] flex flex-col font-['Pixelify_Sans',sans-serif] cozy-pixel-bg selection:bg-[#FFE17D]/30">
+    <div className="min-h-screen w-full bg-[#111822] text-[#FFE17D] flex flex-col font-['Pixelify_Sans',sans-serif] cozy-pixel-bg selection:bg-[#FFE17D]/30 overflow-x-hidden overflow-y-auto">
       
       {/* Top Navbar */}
       <Navbar
@@ -206,7 +206,7 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col items-center justify-center p-2">
+      <main className="flex-1 flex flex-col items-center justify-start sm:justify-center p-2 sm:p-4 w-full">
         {currentScreen === 'start' && (
           <StartScreen
             gameMode={gameMode}
