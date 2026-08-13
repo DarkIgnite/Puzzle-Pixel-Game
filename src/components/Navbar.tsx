@@ -165,7 +165,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     className="flex items-center gap-2 text-left group focus:outline-none cursor-pointer">
                     <div className="w-9 h-9  p-0.5 flex items-center justify-center overflow-hidden">
                         <img
-                            src="/assets/Piece.webp"
+                            src="/public/Piece.webp"
                             alt="Logo"
                             className="w-full h-full object-contain"
                         />
