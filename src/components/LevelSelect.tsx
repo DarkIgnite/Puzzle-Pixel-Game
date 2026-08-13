@@ -1,7 +1,16 @@
+import {
+  ArrowLeft,
+  Camera,
+  CheckCircle,
+  Clock,
+  Grid,
+  Lock,
+  Play,
+  Upload,
+} from 'lucide-react';
 import React, { useRef, useState } from 'react';
-import { ArrowLeft, Play, Grid, CheckCircle, Clock, Lock, Upload, Camera } from 'lucide-react';
-import { LevelConfig, LevelProgress, Photo } from '../types';
 import { getPhotoForLevel } from '../data/photos';
+import { LevelConfig, LevelProgress, Photo } from '../types';
 import { soundManager } from '../utils/audio';
 import { CameraModal } from './CameraModal';
 
@@ -25,10 +34,14 @@ export const LevelSelect: React.FC<LevelSelectProps> = ({
   onUploadPhotoForLevel,
 }) => {
   const levelFileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadTargetLevelId, setUploadTargetLevelId] = useState<number | null>(null);
+  const [uploadTargetLevelId, setUploadTargetLevelId] = useState<number | null>(
+    null,
+  );
 
   const [showCameraModal, setShowCameraModal] = useState<boolean>(false);
-  const [cameraTargetLevelId, setCameraTargetLevelId] = useState<number | null>(null);
+  const [cameraTargetLevelId, setCameraTargetLevelId] = useState<number | null>(
+    null,
+  );
 
   const safeProgressMap = progressMap || {};
 
@@ -40,11 +53,15 @@ export const LevelSelect: React.FC<LevelSelectProps> = ({
   const hasUploadedPhoto = (level: LevelConfig): boolean => {
     if (!level.requiresUpload) return true;
     const photo = photos.find((p) => p.id === level.photoId);
-    return !!(photo?.isCustom);
+    return !!photo?.isCustom;
   };
 
   const handleLevelFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0 && uploadTargetLevelId !== null) {
+    if (
+      e.target.files &&
+      e.target.files.length > 0 &&
+      uploadTargetLevelId !== null
+    ) {
       soundManager.playSnap();
       onUploadPhotoForLevel(uploadTargetLevelId, e.target.files[0]);
       setUploadTargetLevelId(null);
@@ -69,7 +86,9 @@ export const LevelSelect: React.FC<LevelSelectProps> = ({
       fetch(dataUrl)
         .then((res) => res.blob())
         .then((blob) => {
-          const file = new File([blob], `${fileName}.jpg`, { type: 'image/jpeg' });
+          const file = new File([blob], `${fileName}.jpg`, {
+            type: 'image/jpeg',
+          });
           onUploadPhotoForLevel(cameraTargetLevelId, file);
         });
     }
@@ -161,7 +180,9 @@ export const LevelSelect: React.FC<LevelSelectProps> = ({
                 {/* Grid Badge */}
                 <div className="absolute bottom-2 left-2 bg-theme-main border border-theme-title text-theme-title text-[10px] font-bold px-1.5 py-0.5 flex items-center gap-1">
                   <Grid className="w-3 h-3 text-theme-title" />
-                  <span>GRID {level.gridSize}x{level.gridSize}</span>
+                  <span>
+                    GRID {level.gridSize}x{level.gridSize}
+                  </span>
                 </div>
               </div>
 
@@ -178,11 +199,16 @@ export const LevelSelect: React.FC<LevelSelectProps> = ({
                 {progress?.bestTimeSeconds ? (
                   <div className="flex items-center gap-1 text-xs text-theme-accent font-bold mb-3">
                     <Clock className="w-3.5 h-3.5" />
-                    <span>Waktu: {Math.floor(progress.bestTimeSeconds / 60)}m {progress.bestTimeSeconds % 60}s</span>
+                    <span>
+                      Waktu: {Math.floor(progress.bestTimeSeconds / 60)}m{' '}
+                      {progress.bestTimeSeconds % 60}s
+                    </span>
                   </div>
                 ) : (
                   <div className="text-xs text-theme-sub opacity-70 italic mb-3">
-                    {unlocked ? 'Belum dimainkan' : 'Selesaikan level sebelumnya'}
+                    {unlocked
+                      ? 'Belum dimainkan'
+                      : 'Selesaikan level sebelumnya'}
                   </div>
                 )}
               </div>
@@ -215,7 +241,7 @@ export const LevelSelect: React.FC<LevelSelectProps> = ({
                     className="pixel-btn-green py-2 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
                   >
                     <Camera className="w-3 h-3" />
-                    <span>KAMERA 📸</span>
+                    <span>KAMERA</span>
                   </button>
                 </div>
               ) : (
