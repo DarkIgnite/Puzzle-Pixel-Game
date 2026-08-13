@@ -3,6 +3,8 @@ import {
   Clock,
   Coffee,
   Home,
+  Maximize2,
+  Minimize2,
   Moon,
   Palette,
   Sun,
@@ -12,6 +14,14 @@ import {
 import React, { useEffect, useRef, useState } from 'react';
 import { GameMode, ScreenState, ThemeMode } from '../types';
 import { soundManager } from '../utils/audio';
+
+const checkNativeFullscreen = () => {
+  return !!(
+    document.fullscreenElement ||
+    (document as any).webkitFullscreenElement ||
+    (document as any).msFullscreenElement
+  );
+};
 
 interface NavbarProps {
   currentScreen: ScreenState;
@@ -38,6 +48,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showModeMenu, setShowModeMenu] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(() => checkNativeFullscreen());
 
   const themeMenuRef = useRef<HTMLDivElement>(null);
   const modeMenuRef = useRef<HTMLDivElement>(null);
@@ -60,6 +71,49 @@ export const Navbar: React.FC<NavbarProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    const onFsChange = () => {
+      setIsFullscreen(checkNativeFullscreen());
+    };
+    document.addEventListener('fullscreenchange', onFsChange);
+    document.addEventListener('webkitfullscreenchange', onFsChange);
+    document.addEventListener('msfullscreenchange', onFsChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFsChange);
+      document.removeEventListener('webkitfullscreenchange', onFsChange);
+      document.removeEventListener('msfullscreenchange', onFsChange);
+    };
+  }, []);
+
+  const toggleFullscreen = () => {
+    soundManager.playClick();
+    const doc = document as any;
+    const docEl = document.documentElement as any;
+
+    const isFs = checkNativeFullscreen();
+
+    if (!isFs) {
+      if (docEl.requestFullscreen) {
+        docEl.requestFullscreen().catch(() => setIsFullscreen(true));
+      } else if (docEl.webkitRequestFullscreen) {
+        docEl.webkitRequestFullscreen();
+      } else if (docEl.msRequestFullscreen) {
+        docEl.msRequestFullscreen();
+      } else {
+        setIsFullscreen(true);
+      }
+    } else {
+      if (doc.exitFullscreen && doc.fullscreenElement) {
+        doc.exitFullscreen().catch(() => {});
+      } else if (doc.webkitExitFullscreen && doc.webkitFullscreenElement) {
+        doc.webkitExitFullscreen();
+      } else if (doc.msExitFullscreen && doc.msFullscreenElement) {
+        doc.msExitFullscreen();
+      }
+      setIsFullscreen(false);
+    }
+  };
 
   const themeLabels: Record<
     ThemeMode,
@@ -265,6 +319,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             )}
           </div>
+
+          {/* Fullscreen Toggle Button */}
+          <button
+            onClick={toggleFullscreen}
+            title={isFullscreen ? 'Keluar Fullscreen' : 'Layar Penuh (Fullscreen)'}
+            className="pixel-btn-dark p-1 text-xs font-bold cursor-pointer"
+          >
+            {isFullscreen ? (
+              <Minimize2 className="w-4 h-4 text-theme-accent" />
+            ) : (
+              <Maximize2 className="w-4 h-4 text-theme-title" />
+            )}
+          </button>
 
           {/* Sound Mute Toggle */}
           <button
