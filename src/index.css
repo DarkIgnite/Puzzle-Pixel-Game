@@ -42,6 +42,13 @@
     --scrollbar-thumb: #c46e44;
     --scrollbar-thumb-hover: #d57e53;
     --scrollbar-border: #281a0e;
+
+    /* Puzzle screen background palette (dark) */
+    --puzzle-bg-from: #0d1117;
+    --puzzle-bg-mid:  #121a26;
+    --puzzle-bg-to:   #0f1c14;
+    --puzzle-dot:     rgba(245, 199, 84, 0.06);
+    --puzzle-grid:    rgba(196, 110, 68, 0.05);
 }
 
 [data-theme="light"] {
@@ -85,6 +92,13 @@
     --scrollbar-thumb: #e07a5f;
     --scrollbar-thumb-hover: #f28f75;
     --scrollbar-border: #8c5e45;
+
+    /* Puzzle screen background palette (light) */
+    --puzzle-bg-from: #f0e9df;
+    --puzzle-bg-mid:  #ecddd0;
+    --puzzle-bg-to:   #e8ede3;
+    --puzzle-dot:     rgba(92, 61, 46, 0.07);
+    --puzzle-grid:    rgba(224, 122, 95, 0.06);
 }
 
 @layer base {
@@ -302,4 +316,45 @@
 
 .animate-pixel-float {
     animation: pixelFloat 2s steps(4, end) infinite;
+}
+
+/* ── Puzzle Screen Full Background ── */
+/* Smooth gradient palette + subtle pixel-dot texture for the gameplay area */
+.puzzle-bg {
+    background-color: var(--puzzle-bg-from);
+    background-image:
+        /* faint dot grid for pixel feel */
+        radial-gradient(
+            circle,
+            var(--puzzle-dot) 1px,
+            transparent 1px
+        ),
+        /* subtle pixel-line grid overlay */
+        repeating-linear-gradient(
+            0deg,
+            var(--puzzle-grid) 0px,
+            var(--puzzle-grid) 1px,
+            transparent 1px,
+            transparent 32px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            var(--puzzle-grid) 0px,
+            var(--puzzle-grid) 1px,
+            transparent 1px,
+            transparent 32px
+        ),
+        /* main warm→cool diagonal gradient */
+        linear-gradient(
+            135deg,
+            var(--puzzle-bg-from) 0%,
+            var(--puzzle-bg-mid) 50%,
+            var(--puzzle-bg-to) 100%
+        );
+    background-size:
+        16px 16px,
+        100% 100%,
+        100% 100%,
+        100% 100%;
+    transition: background-color 0.3s ease;
 }

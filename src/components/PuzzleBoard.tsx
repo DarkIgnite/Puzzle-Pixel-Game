@@ -428,9 +428,9 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
         // Outer: fills available viewport height (below navbar), no scroll
         <div
             ref={containerRef}
-            className={`w-full flex flex-col select-none font-['Pixelify_Sans',sans-serif] transition-all duration-200 ${
+            className={`w-full flex flex-col select-none font-['Pixelify_Sans',sans-serif] transition-all duration-200 puzzle-bg ${
                 isFullscreen
-                    ? "fixed inset-0 z-50 bg-theme-main p-2 sm:p-4 overflow-hidden"
+                    ? "fixed inset-0 z-50 p-2 sm:p-4 overflow-hidden"
                     : ""
             }`}
             style={{
