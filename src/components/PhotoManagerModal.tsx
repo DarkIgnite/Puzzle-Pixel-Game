@@ -1,8 +1,14 @@
+import {
+  Camera,
+  FolderOpen,
+  Image as ImageIcon,
+  Upload,
+  X,
+} from 'lucide-react';
 import React, { useRef, useState } from 'react';
-import { X, Upload, Image as ImageIcon, FolderOpen, Camera } from 'lucide-react';
 import { Photo } from '../types';
-import { processUploadedFile } from '../utils/canvasHelper';
 import { soundManager } from '../utils/audio';
+import { processUploadedFile } from '../utils/canvasHelper';
 import { CameraModal } from './CameraModal';
 
 interface PhotoManagerModalProps {
@@ -22,7 +28,9 @@ export const PhotoManagerModal: React.FC<PhotoManagerModalProps> = ({
   const activeReplacingPhotoIdRef = useRef<string | null>(null);
 
   const [showCameraModal, setShowCameraModal] = useState<boolean>(false);
-  const [cameraTargetPhotoId, setCameraTargetPhotoId] = useState<string | null>(null);
+  const [cameraTargetPhotoId, setCameraTargetPhotoId] = useState<string | null>(
+    null,
+  );
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -94,7 +102,6 @@ export const PhotoManagerModal: React.FC<PhotoManagerModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 font-['Pixelify_Sans',sans-serif]">
       <div className="pixel-box max-w-2xl w-full p-6 relative flex flex-col max-h-[90vh] overflow-hidden">
-        
         {/* Hidden File Input */}
         <input
           ref={fileInputRef}
@@ -126,7 +133,8 @@ export const PhotoManagerModal: React.FC<PhotoManagerModalProps> = ({
         </h2>
 
         <p className="text-xs text-theme-sub mb-4">
-          Ganti foto default dengan foto dari galeri atau langsung foto menggunakan kamera HP/Laptop!
+          Ganti foto default dengan foto dari galeri atau langsung foto
+          menggunakan kamera HP/Laptop!
         </p>
 
         {/* Photos Grid */}
@@ -192,7 +200,7 @@ export const PhotoManagerModal: React.FC<PhotoManagerModalProps> = ({
               className="flex-1 sm:flex-none pixel-btn-dark px-3 py-2 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Camera className="w-4 h-4" />
-              <span>FOTO KAMERA 📸</span>
+              <span>FOTO KAMERA</span>
             </button>
           </div>
 
@@ -206,7 +214,6 @@ export const PhotoManagerModal: React.FC<PhotoManagerModalProps> = ({
             SELESAI & SIMPAN
           </button>
         </div>
-
       </div>
 
       {/* Camera Modal */}
@@ -219,5 +226,3 @@ export const PhotoManagerModal: React.FC<PhotoManagerModalProps> = ({
     </div>
   );
 };
-
-

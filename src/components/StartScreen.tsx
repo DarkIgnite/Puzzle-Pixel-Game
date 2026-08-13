@@ -1,7 +1,22 @@
-import { Camera, Check, Clock, Coffee, Lock, Play, RefreshCw, Upload } from 'lucide-react';
+import {
+  Camera,
+  Check,
+  Clock,
+  Coffee,
+  Lock,
+  Play,
+  RefreshCw,
+  Upload,
+} from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { getPhotoForLevel } from '../data/photos';
-import { GameMode, LevelConfig, LevelProgress, Photo, ThemeMode } from '../types';
+import {
+  GameMode,
+  LevelConfig,
+  LevelProgress,
+  Photo,
+  ThemeMode,
+} from '../types';
 import { soundManager } from '../utils/audio';
 import { CameraModal } from './CameraModal';
 
@@ -36,17 +51,25 @@ export const StartScreen: React.FC<StartScreenProps> = ({
   const levelFileInputRef = useRef<HTMLInputElement>(null);
   const [showModeMenu, setShowModeMenu] = useState(false);
   const modeMenuRef = useRef<HTMLDivElement>(null);
-  const [uploadTargetLevelId, setUploadTargetLevelId] = useState<number | null>(null);
+  const [uploadTargetLevelId, setUploadTargetLevelId] = useState<number | null>(
+    null,
+  );
 
   const [showCameraModal, setShowCameraModal] = useState<boolean>(false);
-  const [cameraTargetLevelId, setCameraTargetLevelId] = useState<number | null>(null);
+  const [cameraTargetLevelId, setCameraTargetLevelId] = useState<number | null>(
+    null,
+  );
 
-  const isUsingCustom = photos.some((p) => p.isCustom && ['photo-1','photo-2','photo-3'].includes(p.id));
+  const isUsingCustom = photos.some(
+    (p) => p.isCustom && ['photo-1', 'photo-2', 'photo-3'].includes(p.id),
+  );
 
   const safeProgressMap = progressMap || {};
 
   // Determine which 3 levels to show based on progress
-  const completedIds = (Object.entries(safeProgressMap) as [string, LevelProgress][])
+  const completedIds = (
+    Object.entries(safeProgressMap) as [string, LevelProgress][]
+  )
     .filter(([, p]) => p?.completed)
     .map(([id]) => Number(id));
   const maxCompleted = completedIds.length > 0 ? Math.max(...completedIds) : 0;
@@ -76,7 +99,11 @@ export const StartScreen: React.FC<StartScreenProps> = ({
   };
 
   const handleLevelFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0 && uploadTargetLevelId !== null) {
+    if (
+      e.target.files &&
+      e.target.files.length > 0 &&
+      uploadTargetLevelId !== null
+    ) {
       soundManager.playSnap();
       onUploadPhotoForLevel(uploadTargetLevelId, e.target.files[0]);
       setUploadTargetLevelId(null);
@@ -102,7 +129,9 @@ export const StartScreen: React.FC<StartScreenProps> = ({
       fetch(dataUrl)
         .then((res) => res.blob())
         .then((blob) => {
-          const file = new File([blob], `${fileName}.jpg`, { type: 'image/jpeg' });
+          const file = new File([blob], `${fileName}.jpg`, {
+            type: 'image/jpeg',
+          });
           onUploadPhotoForLevel(cameraTargetLevelId, file);
         });
     } else {
@@ -110,7 +139,9 @@ export const StartScreen: React.FC<StartScreenProps> = ({
       fetch(dataUrl)
         .then((res) => res.blob())
         .then((blob) => {
-          const file = new File([blob], `${fileName}.jpg`, { type: 'image/jpeg' });
+          const file = new File([blob], `${fileName}.jpg`, {
+            type: 'image/jpeg',
+          });
           const dt = new DataTransfer();
           dt.items.add(file);
           onUploadCustomPhotos(dt.files);
@@ -126,7 +157,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({
   const hasUploadedPhoto = (level: LevelConfig): boolean => {
     if (!level.requiresUpload) return true;
     const photo = photos.find((p) => p.id === level.photoId);
-    return !!(photo?.isCustom);
+    return !!photo?.isCustom;
   };
 
   return (
@@ -305,7 +336,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({
               className="p-2 border-2 border-theme-inner bg-theme-wall text-theme-title hover:bg-theme-main text-[11px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
             >
               <Camera className="w-3.5 h-3.5" />
-              <span>KAMERA 📸</span>
+              <span>KAMERA</span>
             </button>
           </div>
 
@@ -391,7 +422,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                         className="pixel-btn-green py-2 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
                       >
                         <Camera className="w-3 h-3" />
-                        <span>KAMERA 📸</span>
+                        <span>KAMERA</span>
                       </button>
                     </div>
                   ) : (
