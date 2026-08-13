@@ -198,174 +198,6 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
         const handlePointerUp = (e: PointerEvent) => {
             if (!draggedState) return;
 
-<<<<<<< HEAD
-  return (
-    <div className="w-full max-w-4xl mx-auto px-3 py-3 flex flex-col items-center select-none font-['Pixelify_Sans',sans-serif]">
-      
-      {/* Top Controls Bar */}
-      <div className="w-full pixel-box p-3 sm:p-4 mb-4 flex flex-wrap items-center justify-between gap-3 text-white">
-        
-        {/* Left: Back & Level Title */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => {
-              soundManager.playClick();
-              onBackToLevels();
-            }}
-            className="pixel-btn px-3 py-1.5 flex items-center gap-1.5 text-xs font-bold"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">MENU</span>
-          </button>
-
-          <div>
-            <h2 className="font-pixel-title text-xs sm:text-sm text-[#FFE17D] leading-tight">
-              {level.title}
-            </h2>
-            <p className="text-xs text-[#E0A96D] mt-0.5">
-              Cocok: {correctCount}/{totalPieces} | Pasang di mana saja
-            </p>
-          </div>
-        </div>
-
-        {/* Center: Timer / Mode Indicator */}
-        <div className="flex items-center gap-2 bg-[#1A120B] px-3 py-1.5 border-2 border-[#5A3821] text-xs font-bold text-[#E0A96D]">
-          {gameMode === 'challenge' ? (
-            <>
-              <Clock className="w-4 h-4 text-[#D9865A] animate-pulse" />
-              <span>
-                {Math.floor(timeSeconds / 60)
-                  .toString()
-                  .padStart(2, '0')}
-                :{(timeSeconds % 60).toString().padStart(2, '0')}
-              </span>
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4 text-[#8A9A5B]" />
-              <span>SANTAI</span>
-            </>
-          )}
-        </div>
-
-        {/* Right Action Tools: Preview, Hint, Reset */}
-        <div className="flex items-center gap-2">
-          
-          {/* Hint */}
-          <button
-            onClick={handleUseHint}
-            disabled={correctCount === totalPieces || isLoading}
-            title="Bantuan: Pasang 1 Potongan"
-            className="pixel-btn-green px-2.5 py-1.5 text-xs font-bold flex items-center gap-1 disabled:opacity-50"
-          >
-            <Lightbulb className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">HINT</span>
-          </button>
-
-          {/* Preview Full Image */}
-          <button
-            onClick={() => {
-              soundManager.playClick();
-              setShowPreviewModal(true);
-            }}
-            title="Lihat Foto Utuh"
-            className="pixel-btn px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
-          >
-            <Eye className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">FOTO</span>
-          </button>
-
-          {/* Restart / Reset */}
-          <button
-            onClick={() => {
-              soundManager.playClick();
-              initPuzzle();
-            }}
-            title="Ulangi Level Ini"
-            className="pixel-btn-dark p-1.5 text-xs font-bold"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </button>
-
-        </div>
-
-      </div>
-
-      {/* Main Gameplay Layout */}
-      {isLoading ? (
-        <div className="w-full max-w-md aspect-square pixel-box p-8 flex flex-col items-center justify-center text-center">
-          <div className="w-12 h-12 border-4 border-[#D9865A] border-t-transparent animate-spin mb-4" />
-          <p className="font-pixel-title text-xs text-[#FFE17D]">Memotong Pixel Art...</p>
-          <p className="text-xs text-[#E0A96D] mt-2">Grid {gridSize}x{gridSize}</p>
-        </div>
-      ) : (
-        <div className="w-full flex flex-col items-center gap-4">
-          
-          {/* Puzzle Board Grid (Fixed 1:1 Aspect Ratio) */}
-          <div
-            ref={boardRef}
-            className="w-full max-w-[420px] sm:max-w-[460px] aspect-square bg-[#1A120B] p-2.5 sm:p-3 border-4 border-[#4A3322] shadow-[6px_6px_0px_#110B06] relative"
-          >
-            {/* Watermark Background */}
-            <div className="absolute inset-2.5 sm:inset-3 overflow-hidden opacity-10 pointer-events-none">
-              <img src={fullImageUrl} alt="Watermark" className="w-full h-full object-cover" />
-            </div>
-
-            {/* Grid Cells Container */}
-            <div
-              className="w-full h-full grid gap-1 relative z-10"
-              style={{
-                gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,
-                gridTemplateRows: `repeat(${gridSize}, minmax(0, 1fr))`,
-              }}
-            >
-              {Array.from({ length: totalPieces }).map((_, slotIdx) => {
-                const pieceInSlot = pieces.find((p) => p.currentSlotIndex === slotIdx);
-                const isHovered = hoveredSlotIndex === slotIdx;
-
-                return (
-                  <div
-                    key={slotIdx}
-                    ref={(el) => {
-                      slotsRef.current[slotIdx] = el;
-                    }}
-                    className={`relative aspect-square border-2 transition-all flex items-center justify-center overflow-hidden ${
-                      isHovered
-                        ? 'border-[#FFE17D] bg-[#8A9A5B]/30'
-                        : 'border-[#3D2817] bg-[#22160C]'
-                    }`}
-                  >
-                    {/* Empty Slot Number */}
-                    {!pieceInSlot && (
-                      <span className="text-xs font-mono text-[#5A3821] font-bold pointer-events-none">
-                        {slotIdx + 1}
-                      </span>
-                    )}
-
-                    {/* Piece in Slot */}
-                    {pieceInSlot && (
-                      <div
-                        onPointerDown={(e) => handlePointerDown(e, pieceInSlot, 'grid')}
-                        className={`w-full h-full overflow-hidden cursor-grab active:cursor-grabbing relative touch-none ${
-                          justSnappedPieceId === pieceInSlot.id ? 'ring-2 ring-[#FFE17D]' : ''
-                        }`}
-                      >
-                        <img
-                          src={pieceImages[pieceInSlot.id]}
-                          alt={`Piece ${pieceInSlot.id}`}
-                          className="w-full h-full object-cover pointer-events-none select-none"
-                        />
-
-                        {/* Pixel indicator badge when placed in correct slot */}
-                        {pieceInSlot.currentSlotIndex === pieceInSlot.correctIndex && (
-                          <div className="absolute top-0.5 right-0.5 bg-[#8A9A5B] border border-[#233016] text-white p-0.5 shadow-xs">
-                            <Check className="w-2.5 h-2.5" />
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-=======
             const pieceId = draggedState.pieceId;
             let targetSlot: number | null = null;
 
@@ -442,42 +274,9 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                             ? { ...p, currentSlotIndex: null, isCorrect: false }
                             : p,
                     ),
->>>>>>> punya-helta
                 );
             }
 
-<<<<<<< HEAD
-          {/* Piece Tray */}
-          <div className="w-full max-w-xl pixel-box p-3 sm:p-4">
-            <div className="flex items-center justify-between mb-2 px-1">
-              <span className="font-pixel-title text-[10px] sm:text-xs text-[#FFE17D] flex items-center gap-1.5">
-                <span>TRAY POTONGAN ({trayPieces.length})</span>
-              </span>
-              <span className="text-xs text-[#E0A96D]">
-                Tarik potongan ke slot manapun
-              </span>
-            </div>
-
-            {trayPieces.length === 0 ? (
-              <div className="py-4 text-center text-xs text-[#9CB26B] font-bold flex items-center justify-center gap-2">
-                <Sparkles className="w-4 h-4" />
-                <span>Semua slot terisi! Cek apakah posisinya sudah benar...</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2.5 overflow-x-auto pb-2 pt-1 px-1 touch-pan-x">
-                {trayPieces.map((piece) => (
-                  <div
-                    key={piece.id}
-                    onPointerDown={(e) => handlePointerDown(e, piece, 'tray')}
-                    className="w-18 h-18 sm:w-22 sm:h-22 shrink-0 bg-[#1A120B] p-1 border-2 border-[#5A3821] hover:border-[#D9865A] cursor-grab active:cursor-grabbing hover:scale-105 active:scale-95 touch-none relative"
-                  >
-                    <div className="w-full h-full overflow-hidden bg-[#22160C]">
-                      <img
-                        src={pieceImages[piece.id]}
-                        alt={`Tray piece ${piece.id}`}
-                        className="w-full h-full object-cover pointer-events-none select-none"
-                      />
-=======
             setDraggedState(null);
             setHoveredSlotIndex(null);
         };
@@ -578,7 +377,6 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                             Cocok: {correctCount}/{totalPieces} | Pasang di mana
                             saja
                         </p>
->>>>>>> punya-helta
                     </div>
                 </div>
 
@@ -828,57 +626,5 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                 />
             )}
         </div>
-<<<<<<< HEAD
-      )}
-
-      {/* Floating Dragged Piece Preview */}
-      {draggedState?.isDragging && (
-        <div
-          className="fixed pointer-events-none z-50 w-20 h-20 sm:w-24 sm:h-24 overflow-hidden border-2 border-[#FFE17D] shadow-[4px_4px_0px_#000] scale-110 -translate-x-1/2 -translate-y-1/2"
-          style={{
-            left: `${draggedState.currentX}px`,
-            top: `${draggedState.currentY}px`,
-          }}
-        >
-          <img
-            src={pieceImages[draggedState.pieceId]}
-            alt="Dragging"
-            className="w-full h-full object-cover"
-          />
-        </div>
-      )}
-
-      {/* Preview Modal */}
-      {showPreviewModal && (
-        <PreviewModal
-          photo={photo}
-          imageUrl={fullImageUrl}
-          gridSize={gridSize}
-          onClose={() => setShowPreviewModal(false)}
-        />
-      )}
-
-      {/* Victory Modal */}
-      {isCompleted && (
-        <VictoryModal
-          level={level}
-          photo={photo}
-          imageUrl={fullImageUrl}
-          gameMode={gameMode}
-          timeSeconds={timeSeconds}
-          movesCount={movesCount}
-          onNextLevel={onNextLevel}
-          onBackToLevels={onBackToLevels}
-          onReplay={() => {
-            setIsCompleted(false);
-            initPuzzle();
-          }}
-        />
-      )}
-
-    </div>
-  );
-=======
     );
->>>>>>> punya-helta
 };

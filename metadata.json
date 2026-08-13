@@ -2,5 +2,7 @@
   "name": "Cozy Photo Puzzle",
   "description": "A warm, relaxing drag-and-drop grid puzzle game with touch screen support, customizable cozy photos, timer modes, and soothing audio feedback.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
