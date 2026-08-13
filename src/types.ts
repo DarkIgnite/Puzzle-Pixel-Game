@@ -22,9 +22,10 @@ export interface LevelConfig {
   levelNumber: number;
   title: string;
   subtitle: string;
-  gridSize: number; // 3 = 3x3 (9 pieces), 4 = 4x4 (16 pieces), 5 = 5x5 (25 pieces)
+  gridSize: number; // 3 = 3x3 (9 pieces), 4 = 4x4 (16 pieces), 5 = 5x5 (25 pieces), etc.
   photoId: string;
   defaultPhotoPath: string;
+  requiresUpload?: boolean; // Level 4+ require custom uploaded or camera photo
 }
 
 export interface PuzzlePiece {

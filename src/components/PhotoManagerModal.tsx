@@ -1,8 +1,9 @@
-import React, { useRef } from 'react';
-import { X, Upload, Image as ImageIcon, FolderOpen } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { X, Upload, Image as ImageIcon, FolderOpen, Camera } from 'lucide-react';
 import { Photo } from '../types';
 import { processUploadedFile } from '../utils/canvasHelper';
 import { soundManager } from '../utils/audio';
+import { CameraModal } from './CameraModal';
 
 interface PhotoManagerModalProps {
   photos: Photo[];
@@ -19,6 +20,9 @@ export const PhotoManagerModal: React.FC<PhotoManagerModalProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const activeReplacingPhotoIdRef = useRef<string | null>(null);
+
+  const [showCameraModal, setShowCameraModal] = useState<boolean>(false);
+  const [cameraTargetPhotoId, setCameraTargetPhotoId] = useState<string | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -58,6 +62,35 @@ export const PhotoManagerModal: React.FC<PhotoManagerModalProps> = ({
     fileInputRef.current?.click();
   };
 
+  const openCameraForPhoto = (photoId: string) => {
+    soundManager.playClick();
+    setCameraTargetPhotoId(photoId);
+    setShowCameraModal(true);
+  };
+
+  const openCameraNew = () => {
+    soundManager.playClick();
+    setCameraTargetPhotoId(null);
+    setShowCameraModal(true);
+  };
+
+  const handleCameraCapture = (dataUrl: string, fileName: string) => {
+    setShowCameraModal(false);
+    if (cameraTargetPhotoId) {
+      onUploadPhoto(cameraTargetPhotoId, dataUrl);
+    } else {
+      const newPhoto: Photo = {
+        id: `custom-photo-${Date.now()}`,
+        name: fileName,
+        description: 'Foto kamera',
+        url: dataUrl,
+        placeholderPath: `assets/photos/custom-${Date.now()}.jpg`,
+        isCustom: true,
+      };
+      onAddNewPhoto(newPhoto);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 font-['Pixelify_Sans',sans-serif]">
       <div className="pixel-box max-w-2xl w-full p-6 relative flex flex-col max-h-[90vh] overflow-hidden">
@@ -93,7 +126,7 @@ export const PhotoManagerModal: React.FC<PhotoManagerModalProps> = ({
         </h2>
 
         <p className="text-xs text-theme-sub mb-4">
-          Ganti foto default dengan foto dari perangkat milikmu sendiri.
+          Ganti foto default dengan foto dari galeri atau langsung foto menggunakan kamera HP/Laptop!
         </p>
 
         {/* Photos Grid */}
@@ -119,13 +152,25 @@ export const PhotoManagerModal: React.FC<PhotoManagerModalProps> = ({
                   {photo.isCustom ? 'Custom Image' : photo.placeholderPath}
                 </p>
 
-                <button
-                  onClick={() => triggerUploadForPhoto(photo.id)}
-                  className="pixel-btn px-2 py-1 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
-                >
-                  <Upload className="w-3 h-3" />
-                  <span>GANTI</span>
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => triggerUploadForPhoto(photo.id)}
+                    className="pixel-btn px-2 py-1 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                    title="Upload File Foto"
+                  >
+                    <Upload className="w-3 h-3" />
+                    <span>UPLOAD</span>
+                  </button>
+
+                  <button
+                    onClick={() => openCameraForPhoto(photo.id)}
+                    className="pixel-btn-green px-2 py-1 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                    title="Ambil Foto Kamera"
+                  >
+                    <Camera className="w-3 h-3" />
+                    <span>KAMERA</span>
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -133,13 +178,23 @@ export const PhotoManagerModal: React.FC<PhotoManagerModalProps> = ({
 
         {/* Footer Actions */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-3 border-t-2 border-theme-inner">
-          <button
-            onClick={triggerUploadNew}
-            className="w-full sm:w-auto pixel-btn-green px-4 py-2 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
-          >
-            <ImageIcon className="w-4 h-4" />
-            <span>TAMBAH FOTO BARU</span>
-          </button>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button
+              onClick={triggerUploadNew}
+              className="flex-1 sm:flex-none pixel-btn-green px-3 py-2 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <ImageIcon className="w-4 h-4" />
+              <span>UPLOAD BARU</span>
+            </button>
+
+            <button
+              onClick={openCameraNew}
+              className="flex-1 sm:flex-none pixel-btn-dark px-3 py-2 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <Camera className="w-4 h-4" />
+              <span>FOTO KAMERA 📸</span>
+            </button>
+          </div>
 
           <button
             onClick={() => {
@@ -153,6 +208,14 @@ export const PhotoManagerModal: React.FC<PhotoManagerModalProps> = ({
         </div>
 
       </div>
+
+      {/* Camera Modal */}
+      {showCameraModal && (
+        <CameraModal
+          onCapturePhoto={handleCameraCapture}
+          onClose={() => setShowCameraModal(false)}
+        />
+      )}
     </div>
   );
 };

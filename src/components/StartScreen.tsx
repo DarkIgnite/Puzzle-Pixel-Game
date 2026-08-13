@@ -1,20 +1,23 @@
-import { Check, Clock, Coffee, Play, RefreshCw, Upload } from 'lucide-react';
+import { Camera, Check, Clock, Coffee, Lock, Play, RefreshCw, Upload } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { getPhotoForLevel } from '../data/photos';
-import { GameMode, LevelConfig, Photo, ThemeMode } from '../types';
+import { GameMode, LevelConfig, LevelProgress, Photo, ThemeMode } from '../types';
 import { soundManager } from '../utils/audio';
+import { CameraModal } from './CameraModal';
 
 interface StartScreenProps {
   gameMode: GameMode;
   theme: ThemeMode;
   levels: LevelConfig[];
   photos: Photo[];
+  progressMap?: Record<number, LevelProgress>;
   onSelectLevel: (levelId: number) => void;
   onToggleGameMode: () => void;
   onSelectGameMode: (mode: GameMode) => void;
   onSelectTheme: (theme: ThemeMode) => void;
   onUseDefaultPhotos: () => void;
   onUploadCustomPhotos: (fileList: FileList) => void;
+  onUploadPhotoForLevel: (levelId: number, file: File) => void;
 }
 
 export const StartScreen: React.FC<StartScreenProps> = ({
@@ -22,16 +25,35 @@ export const StartScreen: React.FC<StartScreenProps> = ({
   theme,
   levels,
   photos,
+  progressMap = {},
   onSelectLevel,
   onSelectGameMode,
   onUseDefaultPhotos,
   onUploadCustomPhotos,
+  onUploadPhotoForLevel,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const levelFileInputRef = useRef<HTMLInputElement>(null);
   const [showModeMenu, setShowModeMenu] = useState(false);
   const modeMenuRef = useRef<HTMLDivElement>(null);
+  const [uploadTargetLevelId, setUploadTargetLevelId] = useState<number | null>(null);
 
-  const isUsingCustom = photos.some((p) => p.isCustom);
+  const [showCameraModal, setShowCameraModal] = useState<boolean>(false);
+  const [cameraTargetLevelId, setCameraTargetLevelId] = useState<number | null>(null);
+
+  const isUsingCustom = photos.some((p) => p.isCustom && ['photo-1','photo-2','photo-3'].includes(p.id));
+
+  const safeProgressMap = progressMap || {};
+
+  // Determine which 3 levels to show based on progress
+  const completedIds = (Object.entries(safeProgressMap) as [string, LevelProgress][])
+    .filter(([, p]) => p?.completed)
+    .map(([id]) => Number(id));
+  const maxCompleted = completedIds.length > 0 ? Math.max(...completedIds) : 0;
+
+  let startIdx = Math.max(0, maxCompleted - 1);
+  if (startIdx + 3 > levels.length) startIdx = Math.max(0, levels.length - 3);
+  const visibleLevels: LevelConfig[] = levels.slice(startIdx, startIdx + 3);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -53,9 +75,63 @@ export const StartScreen: React.FC<StartScreenProps> = ({
     }
   };
 
+  const handleLevelFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0 && uploadTargetLevelId !== null) {
+      soundManager.playSnap();
+      onUploadPhotoForLevel(uploadTargetLevelId, e.target.files[0]);
+      setUploadTargetLevelId(null);
+      e.target.value = '';
+    }
+  };
+
+  const triggerLevelUpload = (levelId: number) => {
+    setUploadTargetLevelId(levelId);
+    setTimeout(() => levelFileInputRef.current?.click(), 50);
+  };
+
+  const openCameraForLevel = (levelId?: number) => {
+    soundManager.playClick();
+    setCameraTargetLevelId(levelId || null);
+    setShowCameraModal(true);
+  };
+
+  const handleCameraCapture = (dataUrl: string, fileName: string) => {
+    setShowCameraModal(false);
+    if (cameraTargetLevelId) {
+      // Create file object to pass to handler
+      fetch(dataUrl)
+        .then((res) => res.blob())
+        .then((blob) => {
+          const file = new File([blob], `${fileName}.jpg`, { type: 'image/jpeg' });
+          onUploadPhotoForLevel(cameraTargetLevelId, file);
+        });
+    } else {
+      // General camera upload for level 1-3
+      fetch(dataUrl)
+        .then((res) => res.blob())
+        .then((blob) => {
+          const file = new File([blob], `${fileName}.jpg`, { type: 'image/jpeg' });
+          const dt = new DataTransfer();
+          dt.items.add(file);
+          onUploadCustomPhotos(dt.files);
+        });
+    }
+  };
+
+  const isLevelUnlocked = (level: LevelConfig): boolean => {
+    if (level.id <= 3) return true;
+    return !!safeProgressMap[level.id - 1]?.completed;
+  };
+
+  const hasUploadedPhoto = (level: LevelConfig): boolean => {
+    if (!level.requiresUpload) return true;
+    const photo = photos.find((p) => p.id === level.photoId);
+    return !!(photo?.isCustom);
+  };
+
   return (
     <div className="w-full max-w-4xl mx-auto px-3 py-6 flex flex-col items-center justify-center font-['Pixelify_Sans',sans-serif]">
-      {/* Hidden File Input for Custom Upload */}
+      {/* Hidden File Input for bulk upload (levels 1-3) */}
       <input
         ref={fileInputRef}
         type="file"
@@ -64,16 +140,17 @@ export const StartScreen: React.FC<StartScreenProps> = ({
         onChange={handleFileChange}
         className="hidden"
       />
+      {/* Hidden File Input for single-level upload (levels 4-7) */}
+      <input
+        ref={levelFileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleLevelFileChange}
+        className="hidden"
+      />
 
       {/* Main Pixel Hero Container */}
       <div className="w-full pixel-box p-5 sm:p-8 text-center flex flex-col items-center relative overflow-hidden mb-6">
-        {/* Floating Pixel Badge
-                <div className="inline-flex items-center gap-2 px-3 py-1 pixel-box-inner text-theme-title text-xs font-bold mb-4 animate-pixel-float">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>COZY PIXEL ART PUZZLE</span>
-                </div> */}
-
-        {/* Title */}
         <h1 className="font-pixel-title text-xl sm:text-3xl text-theme-title mb-3 leading-tight">
           COZY PIXEL PUZZLE
         </h1>
@@ -83,7 +160,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({
           dimainkan dengan sentuhan jari layar HP/Tablet atau mouse.
         </p>
 
-        {/* Mode Selector Dropdown Container */}
+        {/* Mode Selector */}
         <div
           ref={modeMenuRef}
           className="w-full max-w-md pixel-box-inner p-3 mb-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-left relative"
@@ -186,26 +263,26 @@ export const StartScreen: React.FC<StartScreenProps> = ({
           </div>
         </div>
 
-        {/* Photo Source Selector Options */}
+        {/* Photo Source for levels 1-3 */}
         <div className="w-full max-w-md pixel-box-inner p-3 mb-2 text-left">
           <div className="font-pixel-title text-[10px] text-theme-title mb-2">
             SUMBER FOTO PUZZLE:
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
             <button
               onClick={() => {
                 soundManager.playClick();
                 onUseDefaultPhotos();
               }}
-              className={`p-2 border-2 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              className={`p-2 border-2 text-[11px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${
                 !isUsingCustom
                   ? 'border-theme-title bg-theme-main text-theme-title'
                   : 'border-theme-inner bg-theme-wall text-theme-sub hover:bg-theme-main'
               }`}
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              <span>FOTO PIXEL</span>
+              <span>PIXEL</span>
             </button>
 
             <button
@@ -213,14 +290,22 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                 soundManager.playClick();
                 fileInputRef.current?.click();
               }}
-              className={`p-2 border-2 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              className={`p-2 border-2 text-[11px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${
                 isUsingCustom
                   ? 'border-theme-title bg-theme-main text-theme-title'
                   : 'border-theme-inner bg-theme-wall text-theme-sub hover:bg-theme-main'
               }`}
             >
               <Upload className="w-3.5 h-3.5" />
-              <span>UPLOAD FOTO</span>
+              <span>UPLOAD</span>
+            </button>
+
+            <button
+              onClick={() => openCameraForLevel()}
+              className="p-2 border-2 border-theme-inner bg-theme-wall text-theme-title hover:bg-theme-main text-[11px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
+            >
+              <Camera className="w-3.5 h-3.5" />
+              <span>KAMERA 📸</span>
             </button>
           </div>
 
@@ -233,15 +318,19 @@ export const StartScreen: React.FC<StartScreenProps> = ({
         </div>
       </div>
 
-      {/* 1-Tap Level Start Cards */}
+      {/* 3 Level Cards */}
       <div className="w-full">
         <div className="font-pixel-title text-xs text-theme-title mb-3 text-center sm:text-left">
           PILIH LEVEL (1-TAP PLAY):
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {levels.map((level) => {
+          {visibleLevels.map((level) => {
             const photo = getPhotoForLevel(level, photos);
+            const unlocked = isLevelUnlocked(level);
+            const uploadedPhoto = hasUploadedPhoto(level);
+            const completed = !!progressMap[level.id]?.completed;
+
             return (
               <div
                 key={level.id}
@@ -252,35 +341,85 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                   <img
                     src={photo.url}
                     alt={level.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                    className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-200 ${!unlocked ? 'opacity-40 grayscale' : ''}`}
                   />
                   <div className="absolute top-1 left-1 bg-theme-main border border-theme-title px-1.5 py-0.5 text-[10px] font-bold text-theme-title">
                     {level.gridSize}x{level.gridSize} GRID
                   </div>
+                  {completed && (
+                    <div className="absolute top-1 right-1 pixel-btn-green text-[10px] font-bold px-1.5 py-0.5 flex items-center gap-1">
+                      <Check className="w-3 h-3" />
+                      <span>SELESAI</span>
+                    </div>
+                  )}
+                  {!unlocked && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Lock className="w-8 h-8 text-theme-title opacity-80" />
+                    </div>
+                  )}
                 </div>
 
                 <div className="font-pixel-title text-xs text-theme-title mb-1">
                   {level.title}
                 </div>
-                <div className="text-xs text-theme-sub mb-3">
+                <div className="text-xs text-theme-sub mb-3 flex-1">
                   {level.subtitle}
                 </div>
 
-                <button
-                  onClick={() => {
-                    soundManager.playClick();
-                    onSelectLevel(level.id);
-                  }}
-                  className="w-full pixel-btn-green py-2 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <Play className="w-4 h-4 fill-current" />
-                  <span>MAIN SEKARANG</span>
-                </button>
+                {/* Action button always at bottom */}
+                <div className="w-full mt-auto">
+                  {!unlocked ? (
+                    <div className="w-full pixel-btn-dark py-2 text-xs font-bold flex items-center justify-center gap-1.5 opacity-60">
+                      <Lock className="w-3.5 h-3.5" />
+                      <span>TERKUNCI</span>
+                    </div>
+                  ) : level.requiresUpload && !uploadedPhoto ? (
+                    <div className="grid grid-cols-2 gap-1.5 w-full">
+                      <button
+                        onClick={() => {
+                          soundManager.playClick();
+                          triggerLevelUpload(level.id);
+                        }}
+                        className="pixel-btn py-2 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                      >
+                        <Upload className="w-3 h-3" />
+                        <span>UPLOAD</span>
+                      </button>
+
+                      <button
+                        onClick={() => openCameraForLevel(level.id)}
+                        className="pixel-btn-green py-2 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                      >
+                        <Camera className="w-3 h-3" />
+                        <span>KAMERA 📸</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        soundManager.playClick();
+                        onSelectLevel(level.id);
+                      }}
+                      className="w-full pixel-btn-green py-2 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Play className="w-4 h-4 fill-current" />
+                      <span>MAIN SEKARANG</span>
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })}
         </div>
       </div>
+
+      {/* Camera Modal */}
+      {showCameraModal && (
+        <CameraModal
+          onCapturePhoto={handleCameraCapture}
+          onClose={() => setShowCameraModal(false)}
+        />
+      )}
     </div>
   );
 };

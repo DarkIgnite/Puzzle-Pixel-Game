@@ -648,41 +648,51 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                     </div>
 
                     {/* ── Piece Tray ── */}
-                    <div className="pixel-box p-2 landscape:w-[22%] landscape:min-w-[120px] landscape:max-w-[200px] shrink-0 flex flex-col min-h-0">
-                        <div className="flex items-center justify-between mb-1 px-0.5 shrink-0">
-                            <span className="font-pixel-title text-[9px] text-theme-title">
-                                TRAY ({trayPieces.length})
-                            </span>
-                            <span className="text-[9px] text-theme-sub">
-                                Tarik ke slot
+                    <div className={`pixel-box p-2.5 shrink-0 flex flex-col min-h-0 transition-all duration-200 ${
+                        isFullscreen
+                            ? "landscape:w-[26%] landscape:min-w-[200px] landscape:max-w-[300px] max-h-[30vh] landscape:max-h-none"
+                            : "landscape:w-[24%] landscape:min-w-[160px] landscape:max-w-[240px] max-h-[28vh] landscape:max-h-none"
+                    }`}>
+                        <div className="flex items-center justify-between mb-2 px-1 shrink-0 border-b border-theme-inner pb-1.5">
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-theme-accent animate-pulse" />
+                                <span className="font-pixel-title text-[10px] sm:text-xs text-theme-title uppercase tracking-wide">
+                                    TRAY PUZZLE
+                                </span>
+                            </div>
+                            <span className="text-[10px] bg-theme-wall border border-theme-inner px-1.5 py-0.5 font-bold text-theme-title">
+                                {trayPieces.length} SISA
                             </span>
                         </div>
 
                         {trayPieces.length === 0 ? (
-                            <div className="flex-1 flex items-center justify-center text-center text-[10px] text-theme-accent font-bold gap-1 p-2">
-                                <Sparkles className="w-3.5 h-3.5 shrink-0" />
-                                <span>Semua terisi! Cek posisinya...</span>
+                            <div className="flex-1 flex flex-col items-center justify-center text-center text-xs text-theme-accent font-bold gap-1.5 p-3 pixel-box-inner bg-theme-wall/50">
+                                <Sparkles className="w-5 h-5 shrink-0 text-theme-title animate-bounce" />
+                                <span>SEMUA TERISI!</span>
+                                <span className="text-[10px] text-theme-sub font-normal">Cek & rapikan posisi potongan di papan!</span>
                             </div>
                         ) : (
-                            // Portrait: horizontal scroll row; Landscape: vertical scroll grid
-                            <div className="flex-1 min-h-0 overflow-auto">
-                                <div className="flex landscape:flex-col landscape:items-center gap-1.5 pb-1 pt-0.5 px-0.5 touch-pan-x landscape:touch-pan-y">
+                            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto custom-scrollbar">
+                                <div className="grid grid-cols-4 sm:grid-cols-6 landscape:grid-cols-2 lg:landscape:grid-cols-3 gap-2 p-1">
                                     {trayPieces.map((piece) => (
                                         <div
                                             key={piece.id}
                                             onPointerDown={(e) =>
                                                 handlePointerDown(e, piece, "tray")
                                             }
-                                            className="shrink-0 pixel-box-inner p-0.5 hover:border-theme-title cursor-grab active:cursor-grabbing hover:scale-105 active:scale-95 touch-none"
-                                            style={{ width: 56, height: 56 }}
+                                            className="aspect-square pixel-box-inner p-1 hover:border-theme-title cursor-grab active:cursor-grabbing hover:scale-105 active:scale-95 transition-all duration-150 touch-none relative group bg-theme-wall hover:shadow-[3px_3px_0px_rgba(0,0,0,0.3)]"
+                                            title={`Tarik Potongan #${piece.id + 1}`}
                                         >
-                                            <div className="w-full h-full overflow-hidden bg-theme-wall">
+                                            <div className="w-full h-full overflow-hidden relative">
                                                 <img
                                                     src={pieceImages[piece.id]}
                                                     alt={`Tray piece ${piece.id}`}
                                                     className="w-full h-full object-cover pointer-events-none select-none"
                                                 />
                                             </div>
+                                            <span className="absolute bottom-0.5 right-0.5 text-[8px] font-mono font-bold text-white bg-black/60 px-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                                #{piece.id + 1}
+                                            </span>
                                         </div>
                                     ))}
                                 </div>
