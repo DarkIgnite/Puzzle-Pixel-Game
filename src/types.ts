@@ -4,7 +4,7 @@
 
 export type GameMode = "relaxed" | "challenge";
 
-export type ThemeMode = "dark" | "light" | "red-white";
+export type ThemeMode = "dark" | "light";
 
 export type ScreenState = "start" | "levelSelect" | "gameplay";
 

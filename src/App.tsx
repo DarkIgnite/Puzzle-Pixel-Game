@@ -47,14 +47,13 @@ export default function App() {
     useEffect(() => {
         try {
             // Saved theme
-            const savedTheme = localStorage.getItem(
-                LOCAL_STORAGE_THEME_KEY,
-            ) as ThemeMode | null;
-            if (savedTheme) {
-                setTheme(savedTheme);
+            const savedTheme = localStorage.getItem(LOCAL_STORAGE_THEME_KEY);
+            if (savedTheme && (savedTheme === "dark" || savedTheme === "light")) {
+                setTheme(savedTheme as ThemeMode);
                 document.documentElement.setAttribute("data-theme", savedTheme);
             } else {
-                document.documentElement.setAttribute("data-theme", "dark");
+                setTheme("light");
+                document.documentElement.setAttribute("data-theme", "light");
             }
 
             // Saved game mode

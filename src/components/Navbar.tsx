@@ -9,7 +9,6 @@ import {
     Palette,
     Moon,
     Sun,
-    Heart,
     Check,
 } from "lucide-react";
 import { GameMode, ScreenState, ThemeMode } from "../types";
@@ -77,11 +76,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             label: "LIGHT",
             icon: <Sun className="w-3.5 h-3.5 text-[#E07A5F]" />,
             desc: "Cozy Day (Siang)",
-        },
-        "red-white": {
-            label: "TELKOM",
-            icon: <Heart className="w-3.5 h-3.5 text-[#ED1E28]" />,
-            desc: "Merah-Putih Telkom Schools",
         },
     };
 
@@ -216,7 +210,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                                 setShowThemeMenu((prev) => !prev);
                                 setShowModeMenu(false);
                             }}
-                            title="Pilih Tema (Dark, Light, Merah Putih)"
+                            title="Pilih Tema (Dark, Light)"
                             className="pixel-btn-dark px-2.5 py-1 text-xs font-bold flex items-center gap-1.5 cursor-pointer">
                             <Palette className="w-3.5 h-3.5 text-theme-title" />
                             <span className="hidden sm:inline">
@@ -238,7 +232,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                                         [
                                             "dark",
                                             "light",
-                                            "red-white",
                                         ] as ThemeMode[]
                                     ).map((tKey) => {
                                         const item = themeLabels[tKey];
