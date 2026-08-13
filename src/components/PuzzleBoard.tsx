@@ -44,6 +44,14 @@ const getMaxHintsForLevel = (levelNumber: number, mode: GameMode): number => {
     }
 };
 
+const checkNativeFullscreen = () => {
+    return !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).msFullscreenElement
+    );
+};
+
 export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
     level,
     photo,
@@ -79,7 +87,9 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
     const [justSnappedPieceId, setJustSnappedPieceId] = useState<number | null>(
         null,
     );
-    const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+    const [isFullscreen, setIsFullscreen] = useState<boolean>(() =>
+        checkNativeFullscreen(),
+    );
 
     // Refs for Board DOM elements to calculate touch positions
     const boardRef = useRef<HTMLDivElement>(null);
@@ -87,16 +97,15 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Track native fullscreen changes
+    // Track native fullscreen changes & sync on mount
     useEffect(() => {
         const onFsChange = () => {
-            const isFsNative = !!(
-                document.fullscreenElement ||
-                (document as any).webkitFullscreenElement ||
-                (document as any).msFullscreenElement
-            );
-            setIsFullscreen(isFsNative);
+            setIsFullscreen(checkNativeFullscreen());
         };
+        
+        // Immediate sync on mount (e.g. when changing levels or remounting component)
+        setIsFullscreen(checkNativeFullscreen());
+
         document.addEventListener("fullscreenchange", onFsChange);
         document.addEventListener("webkitfullscreenchange", onFsChange);
         document.addEventListener("msfullscreenchange", onFsChange);

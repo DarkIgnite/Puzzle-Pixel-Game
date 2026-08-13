@@ -315,7 +315,15 @@ export default function App() {
             onLevelComplete={handleLevelComplete}
             onNextLevel={() => {
               if (activeLevelId < DEFAULT_LEVELS.length) {
-                setActiveLevelId(activeLevelId + 1);
+                const nextId = activeLevelId + 1;
+                const nextLevelConfig = DEFAULT_LEVELS.find((l) => l.id === nextId);
+                const nextPhotoConfig = nextLevelConfig ? getPhotoForLevel(nextLevelConfig, photos) : null;
+                if (nextLevelConfig?.requiresUpload && !nextPhotoConfig?.isCustom) {
+                  setCurrentScreen('levelSelect');
+                } else {
+                  setActiveLevelId(nextId);
+                  setCurrentScreen('gameplay');
+                }
               } else {
                 setCurrentScreen('levelSelect');
               }
