@@ -20,7 +20,7 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 font-['Pixelify_Sans',sans-serif]">
-      <div className="pixel-box max-w-md w-full p-5 relative flex flex-col items-center text-center">
+      <div className="pixel-box max-w-md w-full p-5 relative flex flex-col items-center text-center text-white">
         
         {/* Close Button */}
         <button
@@ -28,23 +28,23 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
             soundManager.playClick();
             onClose();
           }}
-          className="absolute top-3 right-3 pixel-btn-dark p-1 text-xs font-bold cursor-pointer"
+          className="absolute top-3 right-3 pixel-btn-dark p-1 text-xs font-bold"
         >
           <X className="w-4 h-4" />
         </button>
 
         {/* Modal Title */}
-        <div className="flex items-center gap-1.5 text-theme-title text-xs font-bold uppercase mb-1">
+        <div className="flex items-center gap-1.5 text-[#FFE17D] text-xs font-bold uppercase mb-1">
           <Eye className="w-4 h-4" />
           <span>FOTO UTUH</span>
         </div>
 
-        <h3 className="font-pixel-title text-sm text-theme-title mb-3">
+        <h3 className="font-pixel-title text-sm text-[#FFE17D] mb-3">
           {photo.name}
         </h3>
 
         {/* Image Container */}
-        <div className="w-full aspect-square pixel-box-inner overflow-hidden relative mb-4">
+        <div className="w-full aspect-square bg-[#1A120B] border-2 border-[#5A3821] overflow-hidden relative mb-4">
           <img
             src={imageUrl}
             alt={photo.name}
@@ -78,7 +78,7 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
               soundManager.playClick();
               setShowGridOverlay((prev) => !prev);
             }}
-            className="pixel-btn-dark px-3 py-1.5 text-xs font-bold flex items-center gap-1 cursor-pointer"
+            className="pixel-btn-dark px-3 py-1.5 text-xs font-bold flex items-center gap-1"
           >
             <Grid className="w-3.5 h-3.5" />
             <span>GARIS GRID</span>
@@ -89,7 +89,7 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
               soundManager.playClick();
               onClose();
             }}
-            className="pixel-btn px-4 py-1.5 text-xs font-bold cursor-pointer"
+            className="pixel-btn px-4 py-1.5 text-xs font-bold"
           >
             LANJUT
           </button>
@@ -99,5 +99,4 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
     </div>
   );
 };
-
 
