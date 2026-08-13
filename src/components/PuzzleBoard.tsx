@@ -315,27 +315,27 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
               soundManager.playClick();
               onBackToLevels();
             }}
-            className="pixel-btn px-3 py-1.5 flex items-center gap-1.5 text-xs font-bold"
+            className="pixel-btn px-3 py-1.5 flex items-center gap-1.5 text-xs font-bold cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">MENU</span>
           </button>
 
           <div>
-            <h2 className="font-pixel-title text-xs sm:text-sm text-[#FFE17D] leading-tight">
+            <h2 className="font-pixel-title text-xs sm:text-sm text-theme-title leading-tight">
               {level.title}
             </h2>
-            <p className="text-xs text-[#E0A96D] mt-0.5">
+            <p className="text-xs text-theme-sub mt-0.5">
               Cocok: {correctCount}/{totalPieces} | Pasang di mana saja
             </p>
           </div>
         </div>
 
         {/* Center: Timer / Mode Indicator */}
-        <div className="flex items-center gap-2 bg-[#1A120B] px-3 py-1.5 border-2 border-[#5A3821] text-xs font-bold text-[#E0A96D]">
+        <div className="flex items-center gap-2 pixel-box-inner px-3 py-1.5 text-xs font-bold text-theme-sub">
           {gameMode === 'challenge' ? (
             <>
-              <Clock className="w-4 h-4 text-[#D9865A] animate-pulse" />
+              <Clock className="w-4 h-4 text-theme-title animate-pulse" />
               <span>
                 {Math.floor(timeSeconds / 60)
                   .toString()
@@ -345,7 +345,7 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
             </>
           ) : (
             <>
-              <Sparkles className="w-4 h-4 text-[#8A9A5B]" />
+              <Sparkles className="w-4 h-4 text-theme-accent" />
               <span>SANTAI</span>
             </>
           )}
@@ -359,7 +359,7 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
             onClick={handleUseHint}
             disabled={correctCount === totalPieces || isLoading}
             title="Bantuan: Pasang 1 Potongan"
-            className="pixel-btn-green px-2.5 py-1.5 text-xs font-bold flex items-center gap-1 disabled:opacity-50"
+            className="pixel-btn-green px-2.5 py-1.5 text-xs font-bold flex items-center gap-1 disabled:opacity-50 cursor-pointer"
           >
             <Lightbulb className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">HINT</span>
@@ -372,7 +372,7 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
               setShowPreviewModal(true);
             }}
             title="Lihat Foto Utuh"
-            className="pixel-btn px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
+            className="pixel-btn px-2.5 py-1.5 text-xs font-bold flex items-center gap-1 cursor-pointer"
           >
             <Eye className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">FOTO</span>
@@ -385,7 +385,7 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
               initPuzzle();
             }}
             title="Ulangi Level Ini"
-            className="pixel-btn-dark p-1.5 text-xs font-bold"
+            className="pixel-btn-dark p-1.5 text-xs font-bold cursor-pointer"
           >
             <RotateCcw className="w-4 h-4" />
           </button>
@@ -397,9 +397,9 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
       {/* Main Gameplay Layout */}
       {isLoading ? (
         <div className="w-full max-w-md aspect-square pixel-box p-8 flex flex-col items-center justify-center text-center">
-          <div className="w-12 h-12 border-4 border-[#D9865A] border-t-transparent animate-spin mb-4" />
-          <p className="font-pixel-title text-xs text-[#FFE17D]">Memotong Pixel Art...</p>
-          <p className="text-xs text-[#E0A96D] mt-2">Grid {gridSize}x{gridSize}</p>
+          <div className="w-12 h-12 border-4 border-theme-title border-t-transparent animate-spin mb-4" />
+          <p className="font-pixel-title text-xs text-theme-title">Memotong Pixel Art...</p>
+          <p className="text-xs text-theme-sub mt-2">Grid {gridSize}x{gridSize}</p>
         </div>
       ) : (
         <div className="w-full flex flex-col items-center gap-4">
@@ -407,7 +407,7 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
           {/* Puzzle Board Grid (Fixed 1:1 Aspect Ratio) */}
           <div
             ref={boardRef}
-            className="w-full max-w-[420px] sm:max-w-[460px] aspect-square bg-[#1A120B] p-2.5 sm:p-3 border-4 border-[#4A3322] shadow-[6px_6px_0px_#110B06] relative"
+            className="w-full max-w-[420px] sm:max-w-[460px] aspect-square pixel-box p-2.5 sm:p-3 relative"
           >
             {/* Watermark Background */}
             <div className="absolute inset-2.5 sm:inset-3 overflow-hidden opacity-10 pointer-events-none">
@@ -434,13 +434,13 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                     }}
                     className={`relative aspect-square border-2 transition-all flex items-center justify-center overflow-hidden ${
                       isHovered
-                        ? 'border-[#FFE17D] bg-[#8A9A5B]/30'
-                        : 'border-[#3D2817] bg-[#22160C]'
+                        ? 'border-theme-title bg-theme-accent/30'
+                        : 'border-theme-inner bg-theme-wall'
                     }`}
                   >
                     {/* Empty Slot Number */}
                     {!pieceInSlot && (
-                      <span className="text-xs font-mono text-[#5A3821] font-bold pointer-events-none">
+                      <span className="text-xs font-mono text-theme-sub opacity-50 font-bold pointer-events-none">
                         {slotIdx + 1}
                       </span>
                     )}
@@ -450,7 +450,7 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                       <div
                         onPointerDown={(e) => handlePointerDown(e, pieceInSlot, 'grid')}
                         className={`w-full h-full overflow-hidden cursor-grab active:cursor-grabbing relative touch-none ${
-                          justSnappedPieceId === pieceInSlot.id ? 'ring-2 ring-[#FFE17D]' : ''
+                          justSnappedPieceId === pieceInSlot.id ? 'ring-2 ring-theme-title' : ''
                         }`}
                       >
                         <img
@@ -461,7 +461,7 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
 
                         {/* Pixel indicator badge when placed in correct slot */}
                         {pieceInSlot.currentSlotIndex === pieceInSlot.correctIndex && (
-                          <div className="absolute top-0.5 right-0.5 bg-[#8A9A5B] border border-[#233016] text-white p-0.5 shadow-xs">
+                          <div className="absolute top-0.5 right-0.5 pixel-btn-green p-0.5 shadow-xs">
                             <Check className="w-2.5 h-2.5" />
                           </div>
                         )}
@@ -476,16 +476,16 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
           {/* Piece Tray */}
           <div className="w-full max-w-xl pixel-box p-3 sm:p-4">
             <div className="flex items-center justify-between mb-2 px-1">
-              <span className="font-pixel-title text-[10px] sm:text-xs text-[#FFE17D] flex items-center gap-1.5">
+              <span className="font-pixel-title text-[10px] sm:text-xs text-theme-title flex items-center gap-1.5">
                 <span>TRAY POTONGAN ({trayPieces.length})</span>
               </span>
-              <span className="text-xs text-[#E0A96D]">
+              <span className="text-xs text-theme-sub">
                 Tarik potongan ke slot manapun
               </span>
             </div>
 
             {trayPieces.length === 0 ? (
-              <div className="py-4 text-center text-xs text-[#9CB26B] font-bold flex items-center justify-center gap-2">
+              <div className="py-4 text-center text-xs text-theme-accent font-bold flex items-center justify-center gap-2">
                 <Sparkles className="w-4 h-4" />
                 <span>Semua slot terisi! Cek apakah posisinya sudah benar...</span>
               </div>
@@ -495,9 +495,9 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                   <div
                     key={piece.id}
                     onPointerDown={(e) => handlePointerDown(e, piece, 'tray')}
-                    className="w-18 h-18 sm:w-22 sm:h-22 shrink-0 bg-[#1A120B] p-1 border-2 border-[#5A3821] hover:border-[#D9865A] cursor-grab active:cursor-grabbing hover:scale-105 active:scale-95 touch-none relative"
+                    className="w-18 h-18 sm:w-22 sm:h-22 shrink-0 pixel-box-inner p-1 hover:border-theme-title cursor-grab active:cursor-grabbing hover:scale-105 active:scale-95 touch-none relative"
                   >
-                    <div className="w-full h-full overflow-hidden bg-[#22160C]">
+                    <div className="w-full h-full overflow-hidden bg-theme-wall">
                       <img
                         src={pieceImages[piece.id]}
                         alt={`Tray piece ${piece.id}`}
@@ -516,7 +516,7 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
       {/* Floating Dragged Piece Preview */}
       {draggedState?.isDragging && (
         <div
-          className="fixed pointer-events-none z-50 w-20 h-20 sm:w-24 sm:h-24 overflow-hidden border-2 border-[#FFE17D] shadow-[4px_4px_0px_#000] scale-110 -translate-x-1/2 -translate-y-1/2"
+          className="fixed pointer-events-none z-50 w-20 h-20 sm:w-24 sm:h-24 overflow-hidden border-2 border-theme-title shadow-[4px_4px_0px_#000] scale-110 -translate-x-1/2 -translate-y-1/2"
           style={{
             left: `${draggedState.currentX}px`,
             top: `${draggedState.currentY}px`,
@@ -561,3 +561,4 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
     </div>
   );
 };
+

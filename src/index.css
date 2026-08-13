@@ -1,125 +1,348 @@
 @import "tailwindcss";
 
+:root,
+[data-theme="dark"] {
+    --bg-main: #0a0e14;
+    --bg-wall: #0f151f;
+    --floor-p1: #180f09;
+    --floor-p2: #24180e;
+    --floor-p3: #1e130b;
+    --floor-p4: #150c07;
+
+    --color-title: #f5c754;
+    --color-sub: #c99462;
+    --color-accent: #788b4b;
+    --color-text-main: #ece3d4;
+
+    --box-bg: #1a120b;
+    --box-border: #352215;
+    --box-shadow: #050302;
+    --box-inner-bg: #0f0a06;
+    --box-inner-border: #2d1a0d;
+
+    --btn-main-bg: #c46e44;
+    --btn-main-hover: #d57e53;
+    --btn-main-border: #281a0e;
+    --btn-main-shadow: #0d0703;
+    --btn-main-text: #ffffff;
+
+    --btn-dark-bg: #24170d;
+    --btn-dark-hover: #332113;
+    --btn-dark-border: #120b05;
+    --btn-dark-shadow: #050201;
+    --btn-dark-text: #ece3d4;
+
+    --btn-green-bg: #6b7b43;
+    --btn-green-hover: #7c8f4f;
+    --btn-green-border: #18220d;
+    --btn-green-shadow: #0a0f05;
+    --btn-green-text: #ffffff;
+
+    --scrollbar-track: #0a0e14;
+    --scrollbar-thumb: #c46e44;
+    --scrollbar-thumb-hover: #d57e53;
+    --scrollbar-border: #281a0e;
+}
+
+[data-theme="light"] {
+    --bg-main: #faf5ef;
+    --bg-wall: #f7efe5;
+    --floor-p1: #c68b59;
+    --floor-p2: #ddb892;
+    --floor-p3: #cb997e;
+    --floor-p4: #b07d62;
+
+    --color-title: #5c3d2e;
+    --color-sub: #5b311b;
+    --color-accent: #b2ccba;
+    --color-text-main: #3d2817;
+
+    --box-bg: #fff9f2;
+    --box-border: #c89f81;
+    --box-shadow: #8c6747;
+    --box-inner-bg: #f4ece1;
+    --box-inner-border: #d5b9a4;
+
+    --btn-main-bg: #e07a5f;
+    --btn-main-hover: #f28f75;
+    --btn-main-border: #8c5e45;
+    --btn-main-shadow: #5c3d2e;
+    --btn-main-text: #ffffff;
+
+    --btn-dark-bg: #8c6747;
+    --btn-dark-hover: #a07755;
+    --btn-dark-border: #5c3d2e;
+    --btn-dark-shadow: #3d2817;
+    --btn-dark-text: #fff9f2;
+
+    --btn-green-bg: #4a7c59;
+    --btn-green-hover: #5f9e72;
+    --btn-green-border: #2d4f38;
+    --btn-green-shadow: #1e3626;
+    --btn-green-text: #ffffff;
+
+    --scrollbar-track: #f4ece1;
+    --scrollbar-thumb: #e07a5f;
+    --scrollbar-thumb-hover: #f28f75;
+    --scrollbar-border: #8c5e45;
+}
+
+[data-theme="red-white"] {
+    --bg-main: #fff5f5;
+    --bg-wall: #fde8e8;
+    --floor-p1: #9b1c1c;
+    --floor-p2: #c92a2a;
+    --floor-p3: #b02525;
+    --floor-p4: #800000;
+
+    --color-title: #f79797;
+    --color-sub: #7a131d;
+    --color-accent: #2b8a3e;
+    --color-text-main: #4a0e17;
+
+    --box-bg: #ffffff;
+    --box-border: #e03131;
+    --box-shadow: #800000;
+    --box-inner-bg: #fff0f0;
+    --box-inner-border: #ffc9c9;
+
+    --btn-main-bg: #e03131;
+    --btn-main-hover: #ff6b6b;
+    --btn-main-border: #800000;
+    --btn-main-shadow: #500000;
+    --btn-main-text: #ffffff;
+
+    --btn-dark-bg: #a71d2a;
+    --btn-dark-hover: #c92a2a;
+    --btn-dark-border: #600000;
+    --btn-dark-shadow: #400000;
+    --btn-dark-text: #ffffff;
+
+    --btn-green-bg: #2b8a3e;
+    --btn-green-hover: #40c057;
+    --btn-green-border: #1e5e2b;
+    --btn-green-shadow: #14401d;
+    --btn-green-text: #ffffff;
+
+    --scrollbar-track: #fff0f0;
+    --scrollbar-thumb: #e03131;
+    --scrollbar-thumb-hover: #ff6b6b;
+    --scrollbar-border: #800000;
+}
+
 @layer base {
-  html, body {
-    min-height: 100%;
-    height: auto;
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    touch-action: manipulation;
-  }
+    html,
+    body {
+        min-height: 100%;
+        height: auto;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        touch-action: manipulation;
+    }
 
-  body {
-    font-family: 'Pixelify Sans', cursive, sans-serif;
-    background-color: #1B2430;
-    color: #FAF2E8;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-    -webkit-user-select: none;
-    font-size: 18px;
-  }
+    body {
+        font-family: "Pixelify Sans", cursive, sans-serif;
+        background-color: var(--bg-wall);
+        color: var(--color-text-main);
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        -webkit-user-select: none;
+        font-size: 18px;
+        transition:
+            background-color 0.3s ease,
+            color 0.3s ease;
+    }
 
-  h1, h2, h3, h4, h5, h6, .font-pixel-title {
-    font-family: 'Press Start 2P', monospace, cursive;
-    letter-spacing: -0.05em;
-  }
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    .font-pixel-title {
+        font-family: "Press Start 2P", monospace, cursive;
+        letter-spacing: -0.05em;
+    }
 
-  img, canvas {
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
-  }
+    img,
+    canvas {
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+    }
 }
 
 /* Custom pixel scrollbar */
 ::-webkit-scrollbar {
-  height: 10px;
-  width: 10px;
+    height: 10px;
+    width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #111822;
-  border: 2px solid #3D2817;
+    background: var(--scrollbar-track);
+    border: 2px solid var(--scrollbar-border);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #D9865A;
-  border: 2px solid #111822;
+    background: var(--scrollbar-thumb);
+    border: 2px solid var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #E0A96D;
+    background: var(--scrollbar-thumb-hover);
+}
+
+/* Theme utility helper classes */
+.text-theme-title {
+    color: var(--color-title);
+}
+.text-theme-sub {
+    color: var(--color-sub);
+}
+.text-theme-accent {
+    color: var(--color-accent);
+}
+.text-theme-main {
+    color: var(--color-text-main);
+}
+.bg-theme-main {
+    background-color: var(--bg-main);
+}
+.bg-theme-wall {
+    background-color: var(--bg-wall);
+}
+.bg-theme-inner {
+    background-color: var(--box-inner-bg);
+}
+.border-theme-inner {
+    border-color: var(--box-inner-border);
+}
+.border-theme-box {
+    border-color: var(--box-border);
+}
+.border-theme-title {
+    border-color: var(--color-title);
 }
 
 /* Pixel Art Border & Button Effects */
 .pixel-box {
-  background-color: #2C1E14;
-  border: 4px solid #4A3322;
-  box-shadow: 4px 4px 0px #110B06;
+    background-color: var(--box-bg);
+    border: 4px solid var(--box-border);
+    box-shadow: 4px 4px 0px var(--box-shadow);
+    color: var(--color-text-main);
+    transition:
+        background-color 0.3s ease,
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
+}
+
+.pixel-box-inner {
+    background-color: var(--box-inner-bg);
+    border: 2px solid var(--box-inner-border);
+    color: var(--color-text-main);
+    transition:
+        background-color 0.3s ease,
+        border-color 0.3s ease;
 }
 
 .pixel-box-light {
-  background-color: #F7E7CE;
-  border: 4px solid #3D2817;
-  color: #3D2817;
-  box-shadow: 4px 4px 0px #1E120A;
+    background-color: #f7e7ce;
+    border: 4px solid #3d2817;
+    color: #3d2817;
+    box-shadow: 4px 4px 0px #1e120a;
 }
 
 .pixel-btn {
-  background-color: #D9865A;
-  color: #FFFFFF;
-  border: 3px solid #3D2817;
-  box-shadow: 3px 3px 0px #1E120A;
-  transition: all 0.08s ease;
+    background-color: var(--btn-main-bg);
+    color: var(--btn-main-text);
+    border: 3px solid var(--btn-main-border);
+    box-shadow: 3px 3px 0px var(--btn-main-shadow);
+    transition: all 0.08s ease;
 }
 
 .pixel-btn:hover {
-  background-color: #E0A96D;
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0px #1E120A;
+    background-color: var(--btn-main-hover);
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px var(--btn-main-shadow);
 }
 
 .pixel-btn:active {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0px #1E120A;
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px var(--btn-main-shadow);
 }
 
 .pixel-btn-green {
-  background-color: #8A9A5B;
-  color: #FFFFFF;
-  border: 3px solid #233016;
-  box-shadow: 3px 3px 0px #121A0B;
+    background-color: var(--btn-green-bg);
+    color: var(--btn-green-text);
+    border: 3px solid var(--btn-green-border);
+    box-shadow: 3px 3px 0px var(--btn-green-shadow);
+    transition: all 0.08s ease;
 }
 
 .pixel-btn-green:hover {
-  background-color: #9CB26B;
+    background-color: var(--btn-green-hover);
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px var(--btn-green-shadow);
+}
+
+.pixel-btn-green:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px var(--btn-green-shadow);
 }
 
 .pixel-btn-dark {
-  background-color: #3D2817;
-  color: #FAF2E8;
-  border: 3px solid #1C120A;
-  box-shadow: 3px 3px 0px #0D0804;
+    background-color: var(--btn-dark-bg);
+    color: var(--btn-dark-text);
+    border: 3px solid var(--btn-dark-border);
+    box-shadow: 3px 3px 0px var(--btn-dark-shadow);
+    transition: all 0.08s ease;
 }
 
-/* Cozy Pixel Art Interior Scene Background: Dark Navy Pixel Wall + Horizontal Wood Floor */
+.pixel-btn-dark:hover {
+    background-color: var(--btn-dark-hover);
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px var(--btn-dark-shadow);
+}
+
+.pixel-btn-dark:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px var(--btn-dark-shadow);
+}
+
+/* Cozy Pixel Art Interior Scene Background: Pixel Wall + Horizontal Wood Floor */
 .cozy-pixel-bg {
-  background-color: #1B2430;
-  background-image: 
-    /* Horizontal pixel wood floor planks at bottom */
-    linear-gradient(to bottom, transparent 65%, #2C1D11 65%),
-    linear-gradient(90deg, #3D2817 0px, #3D2817 100%),
-    repeating-linear-gradient(0deg, #352314 0px, #352314 16px, #2A1A0E 16px, #2A1A0E 32px);
-  background-size: 100% 100%, 100% 100%, 100% 32px;
-  background-position: 0 0, 0 65%, 0 65%;
+    background-color: var(--bg-wall);
+    background-image:
+        linear-gradient(to bottom, transparent 65%, var(--floor-p1) 65%),
+        linear-gradient(90deg, var(--floor-p2) 0px, var(--floor-p2) 100%),
+        repeating-linear-gradient(
+            0deg,
+            var(--floor-p3) 0px,
+            var(--floor-p3) 16px,
+            var(--floor-p4) 16px,
+            var(--floor-p4) 32px
+        );
+    background-size:
+        100% 100%,
+        100% 100%,
+        100% 32px;
+    background-position:
+        0 0,
+        0 65%,
+        0 65%;
+    transition: background-color 0.3s ease;
 }
 
 @keyframes pixelFloat {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-4px); }
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-4px);
+    }
 }
 
 .animate-pixel-float {
-  animation: pixelFloat 2s steps(4, end) infinite;
+    animation: pixelFloat 2s steps(4, end) infinite;
 }
-

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Play, Grid, Sparkles, CheckCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Play, Grid, CheckCircle, Clock } from 'lucide-react';
 import { LevelConfig, LevelProgress, Photo } from '../types';
 import { getPhotoForLevel } from '../data/photos';
 import { soundManager } from '../utils/audio';
@@ -31,14 +31,14 @@ export const LevelSelect: React.FC<LevelSelectProps> = ({
             soundManager.playClick();
             onBack();
           }}
-          className="pixel-btn-dark px-3 py-1 text-xs font-bold flex items-center gap-1"
+          className="pixel-btn-dark px-3 py-1 text-xs font-bold flex items-center gap-1 cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>KEMBALI</span>
         </button>
 
         <div className="text-center">
-          <h1 className="font-pixel-title text-sm sm:text-lg text-[#FFE17D]">
+          <h1 className="font-pixel-title text-sm sm:text-lg text-theme-title">
             PILIH LEVEL PUZZLE
           </h1>
         </div>
@@ -48,7 +48,7 @@ export const LevelSelect: React.FC<LevelSelectProps> = ({
             soundManager.playClick();
             onOpenPhotoManager();
           }}
-          className="pixel-btn px-2.5 py-1 text-xs font-bold"
+          className="pixel-btn px-2.5 py-1 text-xs font-bold cursor-pointer"
         >
           GANTI FOTO
         </button>
@@ -68,10 +68,10 @@ export const LevelSelect: React.FC<LevelSelectProps> = ({
                 soundManager.playClick();
                 onSelectLevel(level.id);
               }}
-              className="pixel-box p-4 cursor-pointer flex flex-col justify-between group hover:border-[#FFE17D] transition-all"
+              className="pixel-box p-4 cursor-pointer flex flex-col justify-between group hover:border-theme-title transition-all"
             >
               {/* Photo Thumbnail */}
-              <div className="w-full aspect-square bg-[#1A120B] border-2 border-[#5A3821] overflow-hidden mb-3 relative">
+              <div className="w-full aspect-square pixel-box-inner overflow-hidden mb-3 relative">
                 <img
                   src={photo.url}
                   alt={photo.name}
@@ -80,43 +80,43 @@ export const LevelSelect: React.FC<LevelSelectProps> = ({
                 
                 {/* Completed Badge */}
                 {isCompleted && (
-                  <div className="absolute top-2 right-2 bg-[#8A9A5B] border border-[#233016] text-white text-[10px] font-bold px-1.5 py-0.5 flex items-center gap-1">
+                  <div className="absolute top-2 right-2 pixel-btn-green text-[10px] font-bold px-1.5 py-0.5 flex items-center gap-1">
                     <CheckCircle className="w-3 h-3" />
                     <span>SELESAI</span>
                   </div>
                 )}
 
                 {/* Grid Badge */}
-                <div className="absolute bottom-2 left-2 bg-[#1A120B] border border-[#FFE17D] text-[#FFE17D] text-[10px] font-bold px-1.5 py-0.5 flex items-center gap-1">
-                  <Grid className="w-3 h-3 text-[#FFE17D]" />
+                <div className="absolute bottom-2 left-2 bg-theme-main border border-theme-title text-theme-title text-[10px] font-bold px-1.5 py-0.5 flex items-center gap-1">
+                  <Grid className="w-3 h-3 text-theme-title" />
                   <span>GRID {level.gridSize}x{level.gridSize}</span>
                 </div>
               </div>
 
               {/* Title & Info */}
               <div>
-                <h3 className="font-pixel-title text-xs text-[#FFE17D] mb-1">
+                <h3 className="font-pixel-title text-xs text-theme-title mb-1">
                   {level.title}
                 </h3>
-                <p className="text-xs text-[#E0A96D] mb-2">
+                <p className="text-xs text-theme-sub mb-2">
                   {photo.name} • {level.subtitle}
                 </p>
 
                 {/* Best time / stats */}
                 {progress?.bestTimeSeconds ? (
-                  <div className="flex items-center gap-1 text-xs text-[#8A9A5B] font-bold mb-3">
+                  <div className="flex items-center gap-1 text-xs text-theme-accent font-bold mb-3">
                     <Clock className="w-3.5 h-3.5" />
                     <span>Waktu: {Math.floor(progress.bestTimeSeconds / 60)}m {progress.bestTimeSeconds % 60}s</span>
                   </div>
                 ) : (
-                  <div className="text-xs text-[#E0A96D]/60 italic mb-3">
+                  <div className="text-xs text-theme-sub opacity-70 italic mb-3">
                     Belum dimainkan
                   </div>
                 )}
               </div>
 
               {/* Action Button */}
-              <button className="w-full pixel-btn-green py-2 text-xs font-bold flex items-center justify-center gap-1.5">
+              <button className="w-full pixel-btn-green py-2 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer">
                 <Play className="w-3.5 h-3.5 fill-current" />
                 <span>MAIN</span>
               </button>
@@ -128,4 +128,5 @@ export const LevelSelect: React.FC<LevelSelectProps> = ({
     </div>
   );
 };
+
 
