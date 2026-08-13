@@ -5,7 +5,6 @@ import {
     Lightbulb,
     ArrowLeft,
     Clock,
-    Check,
     Sparkles,
 } from "lucide-react";
 import {
@@ -35,6 +34,14 @@ interface PuzzleBoardProps {
     onBackToLevels: () => void;
 }
 
+const getMaxHintsForLevel = (levelNumber: number, mode: GameMode): number => {
+    if (mode === "relaxed") {
+        return levelNumber * 2 + 1; // Level 1: 3, Level 2: 5, Level 3: 7
+    } else {
+        return levelNumber; // Level 1: 1, Level 2: 2, Level 3: 3
+    }
+};
+
 export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
     level,
     photo,
@@ -46,6 +53,11 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
     const gridSize = level.gridSize;
     const totalPieces = gridSize * gridSize;
 
+    const maxHints = getMaxHintsForLevel(
+        level.levelNumber || level.id || 1,
+        gameMode,
+    );
+
     // Game States
     const [pieces, setPieces] = useState<PuzzlePiece[]>([]);
     const [pieceImages, setPieceImages] = useState<string[]>([]);
@@ -53,6 +65,7 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [movesCount, setMovesCount] = useState<number>(0);
     const [timeSeconds, setTimeSeconds] = useState<number>(0);
+    const [hintsRemaining, setHintsRemaining] = useState<number>(maxHints);
     const [isCompleted, setIsCompleted] = useState<boolean>(false);
     const [showPreviewModal, setShowPreviewModal] = useState<boolean>(false);
     const [draggedState, setDraggedState] = useState<DraggedPieceState | null>(
@@ -77,6 +90,9 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
         setMovesCount(0);
         setTimeSeconds(0);
         setDraggedState(null);
+        setHintsRemaining(
+            getMaxHintsForLevel(level.levelNumber || level.id || 1, gameMode),
+        );
 
         let activeUrl = photo.url;
 
@@ -110,7 +126,7 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
         const shuffledTray = [...initialPieces].sort(() => Math.random() - 0.5);
         setPieces(shuffledTray);
         setIsLoading(false);
-    }, [photo, gridSize, level.id, totalPieces]);
+    }, [photo, gridSize, level.id, level.levelNumber, gameMode, totalPieces]);
 
     useEffect(() => {
         initPuzzle();
@@ -313,11 +329,14 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
 
     // 5. Hint Helper: Auto place 1 misplaced/tray piece into its correct slot
     const handleUseHint = () => {
+        if (hintsRemaining <= 0) return;
         soundManager.playClick();
         const wrongPieces = pieces.filter(
             (p) => p.currentSlotIndex !== p.correctIndex,
         );
         if (wrongPieces.length === 0) return;
+
+        setHintsRemaining((prev) => prev - 1);
 
         const randomPiece =
             wrongPieces[Math.floor(Math.random() * wrongPieces.length)];
@@ -406,11 +425,22 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                     {/* Hint */}
                     <button
                         onClick={handleUseHint}
-                        disabled={correctCount === totalPieces || isLoading}
-                        title="Bantuan: Pasang 1 Potongan"
+                        disabled={
+                            correctCount === totalPieces ||
+                            isLoading ||
+                            hintsRemaining <= 0
+                        }
+                        title={
+                            hintsRemaining > 0
+                                ? `Bantuan: Pasang 1 Potongan (Sisa: ${hintsRemaining})`
+                                : "Bantuan Habis!"
+                        }
                         className="pixel-btn-green px-2.5 py-1.5 text-xs font-bold flex items-center gap-1 disabled:opacity-50 cursor-pointer">
                         <Lightbulb className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">HINT ( 0 )</span>
+                        <span className="hidden sm:inline">
+                            HINT ({hintsRemaining})
+                        </span>
+                        <span className="sm:hidden">({hintsRemaining})</span>
                     </button>
 
                     {/* Preview Full Image */}
@@ -522,14 +552,6 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                                                         alt={`Piece ${pieceInSlot.id}`}
                                                         className="w-full h-full object-cover pointer-events-none select-none"
                                                     />
-
-                                                    {/* Pixel indicator badge when placed in correct slot */}
-                                                    {pieceInSlot.currentSlotIndex ===
-                                                        pieceInSlot.correctIndex && (
-                                                        <div className="absolute top-0.5 right-0.5 pixel-btn-green p-0.5 shadow-xs">
-                                                            <Check className="w-2.5 h-2.5" />
-                                                        </div>
-                                                    )}
                                                 </div>
                                             )}
                                         </div>
