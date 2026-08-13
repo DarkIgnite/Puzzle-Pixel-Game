@@ -316,9 +316,16 @@ export default function App() {
             onNextLevel={() => {
               if (activeLevelId < DEFAULT_LEVELS.length) {
                 const nextId = activeLevelId + 1;
-                const nextLevelConfig = DEFAULT_LEVELS.find((l) => l.id === nextId);
-                const nextPhotoConfig = nextLevelConfig ? getPhotoForLevel(nextLevelConfig, photos) : null;
-                if (nextLevelConfig?.requiresUpload && !nextPhotoConfig?.isCustom) {
+                const nextLevelConfig = DEFAULT_LEVELS.find(
+                  (l) => l.id === nextId,
+                );
+                const nextPhotoConfig = nextLevelConfig
+                  ? getPhotoForLevel(nextLevelConfig, photos)
+                  : null;
+                if (
+                  nextLevelConfig?.requiresUpload &&
+                  !nextPhotoConfig?.isCustom
+                ) {
                   setCurrentScreen('levelSelect');
                 } else {
                   setActiveLevelId(nextId);
@@ -346,6 +353,9 @@ export default function App() {
       {/* Cozy Footer */}
       <footer className="w-full text-center py-4 text-xs text-theme-sub opacity-80 border-t border-theme-inner">
         <p>Created by • Ryan and Fikri</p>
+        <p>
+          <span className="font-sans">©</span> SMK TELKOM BANJARBARU 2026
+        </p>
       </footer>
     </div>
   );
