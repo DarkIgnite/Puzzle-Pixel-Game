@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
     Eye,
     RotateCcw,
@@ -87,21 +87,56 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Track fullscreen changes
+    // Track native fullscreen changes
     useEffect(() => {
         const onFsChange = () => {
-            setIsFullscreen(!!document.fullscreenElement);
+            const isFsNative = !!(
+                document.fullscreenElement ||
+                (document as any).webkitFullscreenElement ||
+                (document as any).msFullscreenElement
+            );
+            setIsFullscreen(isFsNative);
         };
         document.addEventListener("fullscreenchange", onFsChange);
-        return () => document.removeEventListener("fullscreenchange", onFsChange);
+        document.addEventListener("webkitfullscreenchange", onFsChange);
+        document.addEventListener("msfullscreenchange", onFsChange);
+        return () => {
+            document.removeEventListener("fullscreenchange", onFsChange);
+            document.removeEventListener("webkitfullscreenchange", onFsChange);
+            document.removeEventListener("msfullscreenchange", onFsChange);
+        };
     }, []);
 
     const toggleFullscreen = () => {
         soundManager.playClick();
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(() => {});
+        const doc = document as any;
+        const docEl = document.documentElement as any;
+
+        const isFsNative = !!(
+            doc.fullscreenElement ||
+            doc.webkitFullscreenElement ||
+            doc.msFullscreenElement
+        );
+
+        if (!isFsNative && !isFullscreen) {
+            if (docEl.requestFullscreen) {
+                docEl.requestFullscreen().catch(() => setIsFullscreen(true));
+            } else if (docEl.webkitRequestFullscreen) {
+                docEl.webkitRequestFullscreen();
+            } else if (docEl.msRequestFullscreen) {
+                docEl.msRequestFullscreen();
+            } else {
+                setIsFullscreen(true);
+            }
         } else {
-            document.exitFullscreen().catch(() => {});
+            if (doc.exitFullscreen && doc.fullscreenElement) {
+                doc.exitFullscreen().catch(() => {});
+            } else if (doc.webkitExitFullscreen && doc.webkitFullscreenElement) {
+                doc.webkitExitFullscreen();
+            } else if (doc.msExitFullscreen && doc.msFullscreenElement) {
+                doc.msExitFullscreen();
+            }
+            setIsFullscreen(false);
         }
     };
 
@@ -384,8 +419,16 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
         // Outer: fills available viewport height (below navbar), no scroll
         <div
             ref={containerRef}
-            className="w-full flex flex-col select-none font-['Pixelify_Sans',sans-serif]"
-            style={{ height: "calc(100dvh - var(--navbar-h, 56px))" }}
+            className={`w-full flex flex-col select-none font-['Pixelify_Sans',sans-serif] transition-all duration-200 ${
+                isFullscreen
+                    ? "fixed inset-0 z-50 bg-theme-main p-2 sm:p-4 overflow-hidden"
+                    : ""
+            }`}
+            style={{
+                height: isFullscreen
+                    ? "100vh"
+                    : "calc(100dvh - var(--navbar-h, 56px))",
+            }}
         >
             {/* ── Top Controls Bar ── */}
             <div className="w-full pixel-box px-3 py-2 flex flex-wrap items-center justify-between gap-2 shrink-0">
@@ -515,10 +558,14 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                     <div className="flex-1 min-h-0 flex items-center justify-center">
                         <div
                             ref={boardRef}
-                            className="pixel-box p-2 relative"
+                            className="pixel-box p-2 relative shrink-0 transition-all duration-200"
                             style={{
-                                // Square that fits the available space
-                                width:  "min(100%, calc((100dvh - var(--navbar-h,56px) - 130px) * 0.65))",
+                                width: isFullscreen
+                                    ? "min(95vw, calc(100vh - 120px))"
+                                    : "min(100%, calc(100dvh - var(--navbar-h, 56px) - 130px))",
+                                maxHeight: isFullscreen
+                                    ? "calc(100vh - 120px)"
+                                    : "calc(100dvh - var(--navbar-h, 56px) - 130px)",
                                 aspectRatio: "1 / 1",
                             }}
                         >

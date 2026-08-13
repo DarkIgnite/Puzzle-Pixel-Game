@@ -1,5 +1,5 @@
+import { Eye, Grid, Maximize2, Minimize2, X } from 'lucide-react';
 import React, { useState } from 'react';
-import { X, Grid, Eye } from 'lucide-react';
 import { Photo } from '../types';
 import { soundManager } from '../utils/audio';
 
@@ -17,18 +17,22 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
   onClose,
 }) => {
   const [showGridOverlay, setShowGridOverlay] = useState<boolean>(true);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 font-['Pixelify_Sans',sans-serif]">
-      <div className="pixel-box max-w-md w-full p-5 relative flex flex-col items-center text-center">
-        
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 font-['Pixelify_Sans',sans-serif]">
+      <div
+        className={`pixel-box w-full p-4 relative flex flex-col items-center text-center transition-all duration-200 ${
+          isExpanded ? 'max-w-2xl sm:max-w-3xl max-h-[92vh]' : 'max-w-md'
+        }`}
+      >
         {/* Close Button */}
         <button
           onClick={() => {
             soundManager.playClick();
             onClose();
           }}
-          className="absolute top-3 right-3 pixel-btn-dark p-1 text-xs font-bold cursor-pointer"
+          className="absolute top-3 right-3 pixel-btn-dark p-1 text-xs font-bold cursor-pointer z-10"
         >
           <X className="w-4 h-4" />
         </button>
@@ -39,12 +43,16 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
           <span>FOTO UTUH</span>
         </div>
 
-        <h3 className="font-pixel-title text-sm text-theme-title mb-3">
+        <h3 className="font-pixel-title text-sm text-theme-title mb-2">
           {photo.name}
         </h3>
 
         {/* Image Container */}
-        <div className="w-full aspect-square pixel-box-inner overflow-hidden relative mb-4">
+        <div
+          className={`w-full aspect-square pixel-box-inner overflow-hidden relative mb-3 transition-all duration-200 ${
+            isExpanded ? 'max-h-[68vh]' : 'max-h-[55vh]'
+          }`}
+        >
           <img
             src={imageUrl}
             alt={photo.name}
@@ -61,8 +69,11 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
               }}
             >
               {Array.from({ length: gridSize * gridSize }).map((_, i) => (
-                <div key={i} className="border border-white/50 bg-black/20 flex items-center justify-center">
-                  <span className="text-[10px] text-white font-mono font-bold">
+                <div
+                  key={i}
+                  className="border border-white/50 bg-black/20 flex items-center justify-center"
+                >
+                  <span className="text-[10px] text-white font-mono font-bold drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
                     {i + 1}
                   </span>
                 </div>
@@ -81,7 +92,27 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
             className="pixel-btn-dark px-3 py-1.5 text-xs font-bold flex items-center gap-1 cursor-pointer"
           >
             <Grid className="w-3.5 h-3.5" />
-            <span>GARIS GRID</span>
+            <span>{showGridOverlay ? 'SEMBUNYIKAN GRID' : 'TAMPILKAN GRID'}</span>
+          </button>
+
+          <button
+            onClick={() => {
+              soundManager.playClick();
+              setIsExpanded((prev) => !prev);
+            }}
+            className="pixel-btn-dark px-3 py-1.5 text-xs font-bold flex items-center gap-1 cursor-pointer"
+          >
+            {isExpanded ? (
+              <>
+                <Minimize2 className="w-3.5 h-3.5" />
+                <span>KECILKAN</span>
+              </>
+            ) : (
+              <>
+                <Maximize2 className="w-3.5 h-3.5" />
+                <span>PERBESAR</span>
+              </>
+            )}
           </button>
 
           <button
@@ -91,13 +122,10 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
             }}
             className="pixel-btn px-4 py-1.5 text-xs font-bold cursor-pointer"
           >
-            LANJUT
+            TUTUP
           </button>
         </div>
-
       </div>
     </div>
   );
 };
-
-
