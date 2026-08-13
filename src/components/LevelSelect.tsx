@@ -1,7 +1,7 @@
+﻿import { ArrowLeft, CheckCircle, Clock, Grid, Play } from 'lucide-react';
 import React from 'react';
-import { ArrowLeft, Play, Grid, CheckCircle, Clock } from 'lucide-react';
-import { LevelConfig, LevelProgress, Photo } from '../types';
 import { getPhotoForLevel } from '../data/photos';
+import { LevelConfig, LevelProgress, Photo } from '../types';
 import { soundManager } from '../utils/audio';
 
 interface LevelSelectProps {
@@ -23,7 +23,6 @@ export const LevelSelect: React.FC<LevelSelectProps> = ({
 }) => {
   return (
     <div className="w-full max-w-4xl mx-auto px-3 py-6 font-['Pixelify_Sans',sans-serif]">
-      
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <button
@@ -77,7 +76,7 @@ export const LevelSelect: React.FC<LevelSelectProps> = ({
                   alt={photo.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                 />
-                
+
                 {/* Completed Badge */}
                 {isCompleted && (
                   <div className="absolute top-2 right-2 pixel-btn-green text-[10px] font-bold px-1.5 py-0.5 flex items-center gap-1">
@@ -89,7 +88,9 @@ export const LevelSelect: React.FC<LevelSelectProps> = ({
                 {/* Grid Badge */}
                 <div className="absolute bottom-2 left-2 bg-theme-main border border-theme-title text-theme-title text-[10px] font-bold px-1.5 py-0.5 flex items-center gap-1">
                   <Grid className="w-3 h-3 text-theme-title" />
-                  <span>GRID {level.gridSize}x{level.gridSize}</span>
+                  <span>
+                    GRID {level.gridSize}x{level.gridSize}
+                  </span>
                 </div>
               </div>
 
@@ -106,7 +107,10 @@ export const LevelSelect: React.FC<LevelSelectProps> = ({
                 {progress?.bestTimeSeconds ? (
                   <div className="flex items-center gap-1 text-xs text-theme-accent font-bold mb-3">
                     <Clock className="w-3.5 h-3.5" />
-                    <span>Waktu: {Math.floor(progress.bestTimeSeconds / 60)}m {progress.bestTimeSeconds % 60}s</span>
+                    <span>
+                      Waktu: {Math.floor(progress.bestTimeSeconds / 60)}m{' '}
+                      {progress.bestTimeSeconds % 60}s
+                    </span>
                   </div>
                 ) : (
                   <div className="text-xs text-theme-sub opacity-70 italic mb-3">
@@ -124,9 +128,6 @@ export const LevelSelect: React.FC<LevelSelectProps> = ({
           );
         })}
       </div>
-
     </div>
   );
 };
-
-

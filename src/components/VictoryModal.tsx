@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { ArrowRight, RotateCcw, Grid, Clock, Sparkles } from 'lucide-react';
+import { ArrowRight, Clock, Grid, RotateCcw, Sparkles } from 'lucide-react';
+import React, { useEffect } from 'react';
 import { GameMode, LevelConfig, Photo } from '../types';
 import { soundManager } from '../utils/audio';
 
@@ -27,7 +27,6 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
   onBackToLevels,
   onReplay,
 }) => {
-
   useEffect(() => {
     try {
       confetti({
@@ -44,7 +43,6 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 font-['Pixelify_Sans',sans-serif]">
       <div className="pixel-box max-w-md w-full p-6 relative flex flex-col items-center text-center">
-        
         {/* Floating Badge */}
         <div className="w-12 h-12 pixel-btn-green flex items-center justify-center shadow-[3px_3px_0px_#000] mb-3 animate-bounce">
           <Sparkles className="w-6 h-6" />
@@ -59,7 +57,9 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
         </h2>
 
         <p className="text-xs text-theme-sub mb-4">
-          Kamu telah menyusun "<span className="text-theme-title">{photo.name}</span>" dengan sempurna!
+          Kamu telah menyusun "
+          <span className="text-theme-title">{photo.name}</span>" dengan
+          sempurna!
         </p>
 
         {/* Full Image Showcase */}
@@ -138,10 +138,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );
 };
-
-

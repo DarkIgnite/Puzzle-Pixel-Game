@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+﻿import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
     Eye,
     RotateCcw,
@@ -6,6 +6,8 @@ import {
     ArrowLeft,
     Clock,
     Sparkles,
+    Maximize2,
+    Minimize2,
 } from "lucide-react";
 import {
     GameMode,
@@ -36,9 +38,9 @@ interface PuzzleBoardProps {
 
 const getMaxHintsForLevel = (levelNumber: number, mode: GameMode): number => {
     if (mode === "relaxed") {
-        return levelNumber * 2 + 1; // Level 1: 3, Level 2: 5, Level 3: 7
+        return levelNumber * 2 + 1;
     } else {
-        return levelNumber; // Level 1: 1, Level 2: 2, Level 3: 3
+        return levelNumber;
     }
 };
 
@@ -77,11 +79,31 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
     const [justSnappedPieceId, setJustSnappedPieceId] = useState<number | null>(
         null,
     );
+    const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
     // Refs for Board DOM elements to calculate touch positions
     const boardRef = useRef<HTMLDivElement>(null);
     const slotsRef = useRef<(HTMLDivElement | null)[]>([]);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // Track fullscreen changes
+    useEffect(() => {
+        const onFsChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+        document.addEventListener("fullscreenchange", onFsChange);
+        return () => document.removeEventListener("fullscreenchange", onFsChange);
+    }, []);
+
+    const toggleFullscreen = () => {
+        soundManager.playClick();
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+            document.exitFullscreen().catch(() => {});
+        }
+    };
 
     // 1. Initialize Image & Slice into NxN pieces
     const initPuzzle = useCallback(async () => {
@@ -97,19 +119,16 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
         let activeUrl = photo.url;
 
         try {
-            // Test loading image
             const sliced = await sliceImageIntoGrid(activeUrl, gridSize);
             setPieceImages(sliced);
             setFullImageUrl(activeUrl);
         } catch {
-            // Fallback to procedural image if photo fails
             const fallbackUrl = createProceduralCozyImage(level.id);
             const sliced = await sliceImageIntoGrid(fallbackUrl, gridSize);
             setPieceImages(sliced);
             setFullImageUrl(fallbackUrl);
         }
 
-        // Build piece objects
         const initialPieces: PuzzlePiece[] = [];
         for (let i = 0; i < totalPieces; i++) {
             initialPieces.push({
@@ -117,12 +136,11 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                 correctIndex: i,
                 row: Math.floor(i / gridSize),
                 col: i % gridSize,
-                currentSlotIndex: null, // Start in tray
+                currentSlotIndex: null,
                 isCorrect: false,
             });
         }
 
-        // Shuffle tray order randomly
         const shuffledTray = [...initialPieces].sort(() => Math.random() - 0.5);
         setPieces(shuffledTray);
         setIsLoading(false);
@@ -152,7 +170,7 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
         piece: PuzzlePiece,
         source: "tray" | "grid",
     ) => {
-        if (isCompleted) return; // Game already won
+        if (isCompleted) return;
         soundManager.playClick();
 
         try {
@@ -193,7 +211,6 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                     : null,
             );
 
-            // Check hover target slot
             let matchedSlot: number | null = null;
             slotsRef.current.forEach((slotEl, idx) => {
                 if (slotEl) {
@@ -217,7 +234,6 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
             const pieceId = draggedState.pieceId;
             let targetSlot: number | null = null;
 
-            // Find nearest slot within drop tolerance
             slotsRef.current.forEach((slotEl, idx) => {
                 if (slotEl) {
                     const rect = slotEl.getBoundingClientRect();
@@ -228,7 +244,6 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                         e.clientY - centerY,
                     );
 
-                    // Within tolerance (e.g. max 75px or cell width/2)
                     if (dist < Math.max(rect.width * 0.8, 60)) {
                         targetSlot = idx;
                     }
@@ -237,7 +252,6 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
 
             setMovesCount((m) => m + 1);
 
-            // Evaluate drop action
             if (targetSlot !== null) {
                 const draggedPiece = pieces.find((p) => p.id === pieceId);
                 if (draggedPiece) {
@@ -254,7 +268,6 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                     setPieces((prevPieces) =>
                         prevPieces.map((p) => {
                             if (p.id === pieceId) {
-                                // Move dragged piece to targetSlot
                                 const isCorrect = targetSlot === p.correctIndex;
                                 return {
                                     ...p,
@@ -266,7 +279,6 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                                 pieceInTargetSlot &&
                                 p.id === pieceInTargetSlot.id
                             ) {
-                                // Swap target slot's occupant to dragged piece's source slot (or tray if came from tray)
                                 const newSlot = draggedState.sourceSlotIndex;
                                 const isCorrect =
                                     newSlot !== null &&
@@ -282,7 +294,6 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                     );
                 }
             } else {
-                // Dropped outside board or in tray area -> Return piece to tray
                 soundManager.playBounce();
                 setPieces((prevPieces) =>
                     prevPieces.map((p) =>
@@ -308,7 +319,7 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
         };
     }, [draggedState, pieces]);
 
-    // 4. Check Victory Condition: ONLY when ALL slots are filled AND all pieces in correct slots
+    // 4. Check Victory Condition
     useEffect(() => {
         if (pieces.length > 0 && !isCompleted) {
             const allFilled = pieces.every((p) => p.currentSlotIndex !== null);
@@ -327,7 +338,7 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
         }
     }, [pieces, isCompleted, timeSeconds, movesCount, onLevelComplete]);
 
-    // 5. Hint Helper: Auto place 1 misplaced/tray piece into its correct slot
+    // 5. Hint Helper
     const handleUseHint = () => {
         if (hintsRemaining <= 0) return;
         soundManager.playClick();
@@ -345,7 +356,6 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
         setTimeout(() => setJustSnappedPieceId(null), 400);
 
         setPieces((prev) => {
-            // Find if another piece is currently occupying randomPiece.correctIndex slot
             const existingOccupant = prev.find(
                 (p) => p.currentSlotIndex === randomPiece.correctIndex,
             );
@@ -358,7 +368,6 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                     };
                 }
                 if (existingOccupant && p.id === existingOccupant.id) {
-                    // Send occupying piece back to tray
                     return { ...p, currentSlotIndex: null, isCorrect: false };
                 }
                 return p;
@@ -366,63 +375,68 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
         });
     };
 
-    // Unplaced pieces in tray
     const trayPieces = pieces.filter((p) => p.currentSlotIndex === null);
     const correctCount = pieces.filter(
         (p) => p.currentSlotIndex === p.correctIndex,
     ).length;
 
     return (
-        <div className="w-full max-w-4xl mx-auto px-3 py-3 flex flex-col items-center select-none font-['Pixelify_Sans',sans-serif]">
-            {/* Top Controls Bar */}
-            <div className="w-full pixel-box p-3 sm:p-4 mb-4 flex flex-wrap items-center justify-between gap-3 text-white">
+        // Outer: fills available viewport height (below navbar), no scroll
+        <div
+            ref={containerRef}
+            className="w-full flex flex-col select-none font-['Pixelify_Sans',sans-serif]"
+            style={{ height: "calc(100dvh - var(--navbar-h, 56px))" }}
+        >
+            {/* ── Top Controls Bar ── */}
+            <div className="w-full pixel-box px-3 py-2 flex flex-wrap items-center justify-between gap-2 shrink-0">
                 {/* Left: Back & Level Title */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                     <button
                         onClick={() => {
                             soundManager.playClick();
                             onBackToLevels();
                         }}
-                        className="pixel-btn px-3 py-1.5 flex items-center gap-1.5 text-xs font-bold cursor-pointer">
-                        <ArrowLeft className="w-4 h-4" />
+                        className="pixel-btn px-2.5 py-1.5 flex items-center gap-1 text-xs font-bold cursor-pointer"
+                    >
+                        <ArrowLeft className="w-3.5 h-3.5" />
                         <span className="hidden sm:inline">MENU</span>
                     </button>
 
                     <div>
-                        <h2 className="font-pixel-title text-xs sm:text-sm text-theme-title leading-tight">
+                        <h2 className="font-pixel-title text-[10px] sm:text-xs text-theme-title leading-tight">
                             {level.title}
                         </h2>
-                        <p className="text-xs text-theme-sub mt-0.5">
-                            Cocok: {correctCount}/{totalPieces} | Pasang di mana
-                            saja
+                        <p className="text-[10px] text-theme-sub mt-0.5">
+                            Cocok: {correctCount}/{totalPieces}
                         </p>
                     </div>
                 </div>
 
-                {/* Center: Timer / Mode Indicator */}
-                <div className="flex items-center gap-2 pixel-box-inner px-3 py-1.5 text-xs font-bold text-theme-sub">
+                {/* Center: Timer */}
+                <div className="flex items-center gap-2 pixel-box-inner px-2.5 py-1 text-xs font-bold text-theme-sub">
                     {gameMode === "challenge" ? (
                         <>
-                            <Clock className="w-4 h-4 text-theme-title animate-pulse" />
+                            <Clock className="w-3.5 h-3.5 text-theme-title animate-pulse" />
                             <span>
                                 {Math.floor(timeSeconds / 60)
                                     .toString()
                                     .padStart(2, "0")}
                                 :
-                                {(timeSeconds % 60).toString().padStart(2, "0")}
+                                {(timeSeconds % 60)
+                                    .toString()
+                                    .padStart(2, "0")}
                             </span>
                         </>
                     ) : (
                         <>
-                            <Sparkles className="w-4 h-4 text-theme-accent" />
+                            <Sparkles className="w-3.5 h-3.5 text-theme-accent" />
                             <span>SANTAI</span>
                         </>
                     )}
                 </div>
 
-                {/* Right Action Tools: Preview, Hint, Reset */}
-                <div className="flex items-center gap-2">
-                    {/* Hint */}
+                {/* Right: Tools */}
+                <div className="flex items-center gap-1.5">
                     <button
                         onClick={handleUseHint}
                         disabled={
@@ -432,172 +446,199 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                         }
                         title={
                             hintsRemaining > 0
-                                ? `Bantuan: Pasang 1 Potongan (Sisa: ${hintsRemaining})`
+                                ? `Bantuan (Sisa: ${hintsRemaining})`
                                 : "Bantuan Habis!"
                         }
-                        className="pixel-btn-green px-2.5 py-1.5 text-xs font-bold flex items-center gap-1 disabled:opacity-50 cursor-pointer">
+                        className="pixel-btn-green px-2 py-1.5 text-xs font-bold flex items-center gap-1 disabled:opacity-50 cursor-pointer"
+                    >
                         <Lightbulb className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">
-                            HINT ({hintsRemaining})
-                        </span>
+                        <span className="hidden sm:inline">HINT ({hintsRemaining})</span>
                         <span className="sm:hidden">({hintsRemaining})</span>
                     </button>
 
-                    {/* Preview Full Image */}
                     <button
                         onClick={() => {
                             soundManager.playClick();
                             setShowPreviewModal(true);
                         }}
                         title="Lihat Foto Utuh"
-                        className="pixel-btn px-2.5 py-1.5 text-xs font-bold flex items-center gap-1 cursor-pointer">
+                        className="pixel-btn px-2 py-1.5 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                    >
                         <Eye className="w-3.5 h-3.5" />
                         <span className="hidden sm:inline">FOTO</span>
                     </button>
 
-                    {/* Restart / Reset */}
                     <button
                         onClick={() => {
                             soundManager.playClick();
                             initPuzzle();
                         }}
-                        title="Ulangi Level Ini"
-                        className="pixel-btn-dark p-1.5 text-xs font-bold cursor-pointer">
-                        <RotateCcw className="w-4 h-4" />
+                        title="Ulangi Level"
+                        className="pixel-btn-dark p-1.5 text-xs font-bold cursor-pointer"
+                    >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                    </button>
+
+                    {/* Fullscreen Toggle */}
+                    <button
+                        onClick={toggleFullscreen}
+                        title={isFullscreen ? "Keluar Fullscreen" : "Fullscreen"}
+                        className="pixel-btn-dark p-1.5 text-xs font-bold cursor-pointer"
+                    >
+                        {isFullscreen ? (
+                            <Minimize2 className="w-3.5 h-3.5" />
+                        ) : (
+                            <Maximize2 className="w-3.5 h-3.5" />
+                        )}
                     </button>
                 </div>
             </div>
 
-            {/* Main Gameplay Layout */}
+            {/* ── Main Gameplay Area ── */}
             {isLoading ? (
-                <div className="w-full max-w-md aspect-square pixel-box p-8 flex flex-col items-center justify-center text-center">
-                    <div className="w-12 h-12 border-4 border-theme-title border-t-transparent animate-spin mb-4" />
-                    <p className="font-pixel-title text-xs text-theme-title">
-                        Memotong Pixel Art...
-                    </p>
-                    <p className="text-xs text-theme-sub mt-2">
-                        Grid {gridSize}x{gridSize}
-                    </p>
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="pixel-box p-8 flex flex-col items-center justify-center text-center">
+                        <div className="w-10 h-10 border-4 border-theme-title border-t-transparent animate-spin mb-3" />
+                        <p className="font-pixel-title text-xs text-theme-title">
+                            Memotong Pixel Art...
+                        </p>
+                        <p className="text-xs text-theme-sub mt-1">
+                            Grid {gridSize}x{gridSize}
+                        </p>
+                    </div>
                 </div>
             ) : (
-                <div className="w-full flex flex-col items-center gap-4">
-                    {/* Puzzle Board Grid (Fixed 1:1 Aspect Ratio) */}
-                    <div
-                        ref={boardRef}
-                        className="w-full max-w-[420px] sm:max-w-[460px] aspect-square pixel-box p-2.5 sm:p-3 relative">
-                        {/* Watermark Background */}
-                        <div className="absolute inset-2.5 sm:inset-3 overflow-hidden opacity-10 pointer-events-none">
-                            <img
-                                src={fullImageUrl}
-                                alt="Watermark"
-                                className="w-full h-full object-cover"
-                            />
-                        </div>
+                // Responsive layout: column on mobile, row on landscape/desktop
+                <div className="flex-1 min-h-0 flex flex-col landscape:flex-row gap-2 p-2">
 
-                        {/* Grid Cells Container */}
+                    {/* ── Puzzle Grid ── */}
+                    <div className="flex-1 min-h-0 flex items-center justify-center">
                         <div
-                            className="w-full h-full grid gap-1 relative z-10"
+                            ref={boardRef}
+                            className="pixel-box p-2 relative"
                             style={{
-                                gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,
-                                gridTemplateRows: `repeat(${gridSize}, minmax(0, 1fr))`,
-                            }}>
-                            {Array.from({ length: totalPieces }).map(
-                                (_, slotIdx) => {
-                                    const pieceInSlot = pieces.find(
-                                        (p) => p.currentSlotIndex === slotIdx,
-                                    );
-                                    const isHovered =
-                                        hoveredSlotIndex === slotIdx;
+                                // Square that fits the available space
+                                width:  "min(100%, calc((100dvh - var(--navbar-h,56px) - 130px) * 0.65))",
+                                aspectRatio: "1 / 1",
+                            }}
+                        >
+                            {/* Watermark */}
+                            <div className="absolute inset-2 overflow-hidden opacity-10 pointer-events-none">
+                                <img
+                                    src={fullImageUrl}
+                                    alt="Watermark"
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
 
-                                    return (
-                                        <div
-                                            key={slotIdx}
-                                            ref={(el) => {
-                                                slotsRef.current[slotIdx] = el;
-                                            }}
-                                            className={`relative aspect-square border-2 transition-all flex items-center justify-center overflow-hidden ${
-                                                isHovered
-                                                    ? "border-theme-title bg-theme-accent/30"
-                                                    : "border-theme-inner bg-theme-wall"
-                                            }`}>
-                                            {/* Empty Slot Number */}
-                                            {!pieceInSlot && (
-                                                <span className="text-xs font-mono text-theme-sub opacity-50 font-bold pointer-events-none">
-                                                    {slotIdx + 1}
-                                                </span>
-                                            )}
+                            {/* Grid Cells */}
+                            <div
+                                className="w-full h-full grid gap-0.5 relative z-10"
+                                style={{
+                                    gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,
+                                    gridTemplateRows: `repeat(${gridSize}, minmax(0, 1fr))`,
+                                }}
+                            >
+                                {Array.from({ length: totalPieces }).map(
+                                    (_, slotIdx) => {
+                                        const pieceInSlot = pieces.find(
+                                            (p) => p.currentSlotIndex === slotIdx,
+                                        );
+                                        const isHovered =
+                                            hoveredSlotIndex === slotIdx;
 
-                                            {/* Piece in Slot */}
-                                            {pieceInSlot && (
-                                                <div
-                                                    onPointerDown={(e) =>
-                                                        handlePointerDown(
-                                                            e,
-                                                            pieceInSlot,
-                                                            "grid",
-                                                        )
-                                                    }
-                                                    className={`w-full h-full overflow-hidden cursor-grab active:cursor-grabbing relative touch-none ${
-                                                        justSnappedPieceId ===
-                                                        pieceInSlot.id
-                                                            ? "ring-2 ring-theme-title"
-                                                            : ""
-                                                    }`}>
-                                                    <img
-                                                        src={
-                                                            pieceImages[
-                                                                pieceInSlot.id
-                                                            ]
+                                        return (
+                                            <div
+                                                key={slotIdx}
+                                                ref={(el) => {
+                                                    slotsRef.current[slotIdx] = el;
+                                                }}
+                                                className={`relative border transition-all flex items-center justify-center overflow-hidden ${
+                                                    isHovered
+                                                        ? "border-theme-title bg-theme-accent/30"
+                                                        : "border-theme-inner bg-theme-wall"
+                                                }`}
+                                            >
+                                                {!pieceInSlot && (
+                                                    <span className="text-[8px] font-mono text-theme-sub opacity-40 font-bold pointer-events-none">
+                                                        {slotIdx + 1}
+                                                    </span>
+                                                )}
+
+                                                {pieceInSlot && (
+                                                    <div
+                                                        onPointerDown={(e) =>
+                                                            handlePointerDown(
+                                                                e,
+                                                                pieceInSlot,
+                                                                "grid",
+                                                            )
                                                         }
-                                                        alt={`Piece ${pieceInSlot.id}`}
-                                                        className="w-full h-full object-cover pointer-events-none select-none"
-                                                    />
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                },
-                            )}
+                                                        className={`w-full h-full overflow-hidden cursor-grab active:cursor-grabbing relative touch-none ${
+                                                            justSnappedPieceId ===
+                                                            pieceInSlot.id
+                                                                ? "ring-1 ring-theme-title"
+                                                                : ""
+                                                        }`}
+                                                    >
+                                                        <img
+                                                            src={
+                                                                pieceImages[
+                                                                    pieceInSlot.id
+                                                                ]
+                                                            }
+                                                            alt={`Piece ${pieceInSlot.id}`}
+                                                            className="w-full h-full object-cover pointer-events-none select-none"
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    },
+                                )}
+                            </div>
                         </div>
                     </div>
 
-                    {/* Piece Tray */}
-                    <div className="w-full max-w-xl pixel-box p-3 sm:p-4">
-                        <div className="flex items-center justify-between mb-2 px-1">
-                            <span className="font-pixel-title text-[10px] sm:text-xs text-theme-title flex items-center gap-1.5">
-                                <span>TRAY POTONGAN ({trayPieces.length})</span>
+                    {/* ── Piece Tray ── */}
+                    <div className="pixel-box p-2 landscape:w-[22%] landscape:min-w-[120px] landscape:max-w-[200px] shrink-0 flex flex-col min-h-0">
+                        <div className="flex items-center justify-between mb-1 px-0.5 shrink-0">
+                            <span className="font-pixel-title text-[9px] text-theme-title">
+                                TRAY ({trayPieces.length})
                             </span>
-                            <span className="text-xs text-theme-sub">
-                                Tarik potongan ke slot manapun
+                            <span className="text-[9px] text-theme-sub">
+                                Tarik ke slot
                             </span>
                         </div>
 
                         {trayPieces.length === 0 ? (
-                            <div className="py-4 text-center text-xs text-theme-accent font-bold flex items-center justify-center gap-2">
-                                <Sparkles className="w-4 h-4" />
-                                <span>
-                                    Semua slot terisi! Cek apakah posisinya
-                                    sudah benar...
-                                </span>
+                            <div className="flex-1 flex items-center justify-center text-center text-[10px] text-theme-accent font-bold gap-1 p-2">
+                                <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                                <span>Semua terisi! Cek posisinya...</span>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-2.5 overflow-x-auto pb-2 pt-1 px-1 touch-pan-x">
-                                {trayPieces.map((piece) => (
-                                    <div
-                                        key={piece.id}
-                                        onPointerDown={(e) =>
-                                            handlePointerDown(e, piece, "tray")
-                                        }
-                                        className="w-18 h-18 sm:w-22 sm:h-22 shrink-0 pixel-box-inner p-1 hover:border-theme-title cursor-grab active:cursor-grabbing hover:scale-105 active:scale-95 touch-none relative">
-                                        <div className="w-full h-full overflow-hidden bg-theme-wall">
-                                            <img
-                                                src={pieceImages[piece.id]}
-                                                alt={`Tray piece ${piece.id}`}
-                                                className="w-full h-full object-cover pointer-events-none select-none"
-                                            />
+                            // Portrait: horizontal scroll row; Landscape: vertical scroll grid
+                            <div className="flex-1 min-h-0 overflow-auto">
+                                <div className="flex landscape:flex-col landscape:items-center gap-1.5 pb-1 pt-0.5 px-0.5 touch-pan-x landscape:touch-pan-y">
+                                    {trayPieces.map((piece) => (
+                                        <div
+                                            key={piece.id}
+                                            onPointerDown={(e) =>
+                                                handlePointerDown(e, piece, "tray")
+                                            }
+                                            className="shrink-0 pixel-box-inner p-0.5 hover:border-theme-title cursor-grab active:cursor-grabbing hover:scale-105 active:scale-95 touch-none"
+                                            style={{ width: 56, height: 56 }}
+                                        >
+                                            <div className="w-full h-full overflow-hidden bg-theme-wall">
+                                                <img
+                                                    src={pieceImages[piece.id]}
+                                                    alt={`Tray piece ${piece.id}`}
+                                                    className="w-full h-full object-cover pointer-events-none select-none"
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
                         )}
                     </div>
@@ -607,11 +648,12 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
             {/* Floating Dragged Piece Preview */}
             {draggedState?.isDragging && (
                 <div
-                    className="fixed pointer-events-none z-50 w-20 h-20 sm:w-24 sm:h-24 overflow-hidden border-2 border-theme-title shadow-[4px_4px_0px_#000] scale-110 -translate-x-1/2 -translate-y-1/2"
+                    className="fixed pointer-events-none z-50 w-16 h-16 sm:w-20 sm:h-20 overflow-hidden border-2 border-theme-title shadow-[4px_4px_0px_#000] scale-110 -translate-x-1/2 -translate-y-1/2"
                     style={{
                         left: `${draggedState.currentX}px`,
                         top: `${draggedState.currentY}px`,
-                    }}>
+                    }}
+                >
                     <img
                         src={pieceImages[draggedState.pieceId]}
                         alt="Dragging"
