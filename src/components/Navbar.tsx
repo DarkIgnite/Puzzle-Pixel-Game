@@ -162,7 +162,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         >
           <div className="w-9 h-9  p-0.5 flex items-center justify-center overflow-hidden">
             <img
-              src="../../public/Piece.png"
+              src="/Piece.png"
               alt="Logo"
               className="w-full h-full object-contain"
             />
