@@ -334,7 +334,7 @@ export const LevelSelect: React.FC<LevelSelectProps> = ({
         })}
       </div>
 
-      {/* Camera Modal */}
+      {/* Camera Modaaal */}
       {showCameraModal && (
         <CameraModal
           onCapturePhoto={handleCameraCapture}
