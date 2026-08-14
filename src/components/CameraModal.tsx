@@ -260,7 +260,7 @@ export const CameraModal: React.FC<CameraModalProps> = ({
           {/* Countdown Overlay */}
           {countdown !== null && (
             <div className="absolute inset-0 bg-black/45 backdrop-blur-[1px] z-20 flex flex-col items-center justify-center pointer-events-none">
-              <div className="w-20 h-20 rounded-full border-4 border-amber-400 bg-black/70 flex items-center justify-center shadow-lg shadow-amber-500/40 animate-pulse">
+              <div className="w-20 h-20 bg-black/70 flex items-center justify-center animate-pulse">
                 <span className="font-pixel-title text-3xl sm:text-4xl text-amber-300 drop-shadow-[0_2px_8px_rgba(245,199,84,0.9)]">
                   {countdown}
                 </span>
