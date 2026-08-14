@@ -106,10 +106,15 @@
     body {
         min-height: 100%;
         height: auto;
-        overflow-x: hidden;
-        overflow-y: auto;
+        overflow-x: clip;
         -webkit-overflow-scrolling: touch;
         touch-action: manipulation;
+    }
+
+    :fullscreen,
+    :-webkit-full-screen {
+        overflow-y: auto;
+        overflow-x: clip;
     }
 
     body {
@@ -141,6 +146,15 @@
         image-rendering: pixelated;
         image-rendering: crisp-edges;
     }
+}
+
+/* Explicit sticky header rule for standard and fullscreen mode */
+header.sticky,
+.sticky-nav {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 50 !important;
 }
 
 /* Custom pixel scrollbar */

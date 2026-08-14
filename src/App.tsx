@@ -265,7 +265,7 @@ export default function App() {
   return (
     <div
       data-theme={theme}
-      className="min-h-screen w-full bg-theme-main text-theme-main flex flex-col font-['Pixelify_Sans',sans-serif] cozy-pixel-bg transition-colors duration-300 relative"
+      className="min-h-screen w-full bg-theme-main text-theme-main flex flex-col font-['Pixelify_Sans',sans-serif] cozy-pixel-bg transition-colors duration-300 relative overflow-x-clip"
     >
       {/* Top Sticky Navbar */}
       <Navbar
