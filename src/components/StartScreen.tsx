@@ -247,10 +247,11 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                       onSelectGameMode('relaxed');
                       setShowModeMenu(false);
                     }}
-                    className={`w-full p-2 text-left text-xs font-bold flex items-center justify-between border transition-all cursor-pointer ${gameMode === 'relaxed'
+                    className={`w-full p-2 text-left text-xs font-bold flex items-center justify-between border transition-all cursor-pointer ${
+                      gameMode === 'relaxed'
                         ? 'pixel-box-inner border-theme-title text-theme-title'
                         : 'border-transparent hover:bg-theme-inner text-theme-sub'
-                      }`}
+                    }`}
                   >
                     <div className="flex items-center gap-2">
                       <Coffee className="w-3.5 h-3.5 text-theme-title" />
@@ -272,10 +273,11 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                       onSelectGameMode('challenge');
                       setShowModeMenu(false);
                     }}
-                    className={`w-full p-2 text-left text-xs font-bold flex items-center justify-between border transition-all cursor-pointer ${gameMode === 'challenge'
+                    className={`w-full p-2 text-left text-xs font-bold flex items-center justify-between border transition-all cursor-pointer ${
+                      gameMode === 'challenge'
                         ? 'pixel-box-inner border-theme-title text-theme-title'
                         : 'border-transparent hover:bg-theme-inner text-theme-sub'
-                      }`}
+                    }`}
                   >
                     <div className="flex items-center gap-2">
                       <Clock className="w-3.5 h-3.5 text-theme-title" />
@@ -308,10 +310,11 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                 soundManager.playClick();
                 onUseDefaultPhotos();
               }}
-              className={`p-2 border-2 text-[11px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${!isUsingCustom
+              className={`p-2 border-2 text-[11px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                !isUsingCustom
                   ? 'border-theme-title bg-theme-main text-theme-title'
                   : 'border-theme-inner bg-theme-wall text-theme-sub hover:bg-theme-main'
-                }`}
+              }`}
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>PIXEL</span>
@@ -322,10 +325,11 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                 soundManager.playClick();
                 fileInputRef.current?.click();
               }}
-              className={`p-2 border-2 text-[11px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${isUsingCustom
+              className={`p-2 border-2 text-[11px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                isUsingCustom
                   ? 'border-theme-title bg-theme-main text-theme-title'
                   : 'border-theme-inner bg-theme-wall text-theme-sub hover:bg-theme-main'
-                }`}
+              }`}
             >
               <Upload className="w-3.5 h-3.5" />
               <span>UPLOAD</span>
@@ -437,7 +441,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                         className="pixel-btn-green py-2 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
                       >
                         <Camera className="w-3 h-3" />
-                        <span>KAMERA 📸</span>
+                        <span>KAMERA</span>
                       </button>
                     </div>
                   ) : (
