@@ -1,5 +1,5 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
-import { Camera, RefreshCw, X, Check, SwitchCamera, AlertCircle, Upload } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Camera, RefreshCw, X, Check, SwitchCamera, AlertCircle, Upload, Timer } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { processUploadedFile } from '../utils/canvasHelper';
 
@@ -15,6 +15,7 @@ export const CameraModal: React.FC<CameraModalProps> = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const countdownIntervalRef = useRef<number | null>(null);
 
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
@@ -22,11 +23,22 @@ export const CameraModal: React.FC<CameraModalProps> = ({
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isFlashing, setIsFlashing] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [selectedTimer, setSelectedTimer] = useState<number>(0); // 0 (off), 3, 5, 10 seconds
+  const [countdown, setCountdown] = useState<number | null>(null);
+
+  const cancelCountdown = () => {
+    if (countdownIntervalRef.current !== null) {
+      window.clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+    setCountdown(null);
+  };
 
   // Start webcam stream
   const startCamera = async (facing: 'user' | 'environment') => {
     setIsLoading(true);
     setCameraError(null);
+    cancelCountdown();
     try {
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
@@ -57,6 +69,7 @@ export const CameraModal: React.FC<CameraModalProps> = ({
   useEffect(() => {
     startCamera(facingMode);
     return () => {
+      cancelCountdown();
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
       }
@@ -65,11 +78,12 @@ export const CameraModal: React.FC<CameraModalProps> = ({
 
   const toggleFacingMode = () => {
     soundManager.playClick();
+    cancelCountdown();
     const nextMode = facingMode === 'user' ? 'environment' : 'user';
     setFacingMode(nextMode);
   };
 
-  const handleTakeSnap = () => {
+  const takeSnap = () => {
     if (!videoRef.current) return;
     soundManager.playSnap();
     setIsFlashing(true);
@@ -99,8 +113,45 @@ export const CameraModal: React.FC<CameraModalProps> = ({
     }
   };
 
+  const handleStartCapture = () => {
+    if (countdown !== null) {
+      cancelCountdown();
+      soundManager.playClick();
+      return;
+    }
+
+    if (selectedTimer === 0) {
+      takeSnap();
+      return;
+    }
+
+    let remaining = selectedTimer;
+    setCountdown(remaining);
+    soundManager.playClick();
+
+    if (countdownIntervalRef.current !== null) {
+      window.clearInterval(countdownIntervalRef.current);
+    }
+
+    countdownIntervalRef.current = window.setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        if (countdownIntervalRef.current !== null) {
+          window.clearInterval(countdownIntervalRef.current);
+          countdownIntervalRef.current = null;
+        }
+        setCountdown(null);
+        takeSnap();
+      } else {
+        setCountdown(remaining);
+        soundManager.playClick();
+      }
+    }, 1000);
+  };
+
   const handleRetake = () => {
     soundManager.playClick();
+    cancelCountdown();
     setCapturedUrl(null);
   };
 
@@ -128,6 +179,13 @@ export const CameraModal: React.FC<CameraModalProps> = ({
     onCapturePhoto(dataUrl, file.name.replace(/\.[^/.]+$/, ''));
   };
 
+  const timerOptions = [
+    { value: 0, label: 'Off' },
+    { value: 3, label: '3s' },
+    { value: 5, label: '5s' },
+    { value: 10, label: '10s' },
+  ];
+
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 font-['Pixelify_Sans',sans-serif]">
       <div className="pixel-box max-w-md w-full p-4 sm:p-5 relative flex flex-col items-center text-center max-h-[95vh] overflow-hidden">
@@ -146,6 +204,7 @@ export const CameraModal: React.FC<CameraModalProps> = ({
         <button
           onClick={() => {
             soundManager.playClick();
+            cancelCountdown();
             if (stream) stream.getTracks().forEach((track) => track.stop());
             onClose();
           }}
@@ -160,14 +219,57 @@ export const CameraModal: React.FC<CameraModalProps> = ({
           <span>KAMERA PIXEL</span>
         </div>
 
-        <h2 className="font-pixel-title text-sm sm:text-base text-theme-title mb-3">
+        <h2 className="font-pixel-title text-sm sm:text-base text-theme-title mb-2">
           AMBIL FOTO KAMERA
         </h2>
+
+        {/* Timer Selection Bar (only when live camera and not yet captured) */}
+        {!capturedUrl && !cameraError && (
+          <div className="w-full flex items-center justify-between px-2.5 py-1.5 mb-3 pixel-box-inner text-xs">
+            <div className="flex items-center gap-1.5 text-theme-sub text-[11px] font-bold">
+              <Timer className="w-3.5 h-3.5 text-theme-title" />
+              <span>TIMER:</span>
+            </div>
+            <div className="flex items-center gap-1">
+              {timerOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  disabled={countdown !== null}
+                  onClick={() => {
+                    soundManager.playClick();
+                    setSelectedTimer(opt.value);
+                  }}
+                  className={`px-2 py-0.5 text-[10px] font-bold cursor-pointer transition-all ${
+                    selectedTimer === opt.value
+                      ? 'pixel-btn-green'
+                      : 'pixel-btn-dark opacity-75 hover:opacity-100'
+                  } ${countdown !== null ? 'cursor-not-allowed opacity-50' : ''}`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Camera Display Box */}
         <div className="w-full aspect-square pixel-box-inner overflow-hidden relative mb-4 bg-black flex items-center justify-center">
           {/* Flash animation layer */}
           {isFlashing && <div className="absolute inset-0 bg-white z-30 animate-ping" />}
+
+          {/* Countdown Overlay */}
+          {countdown !== null && (
+            <div className="absolute inset-0 bg-black/45 backdrop-blur-[1px] z-20 flex flex-col items-center justify-center pointer-events-none">
+              <div className="w-20 h-20 rounded-full border-4 border-amber-400 bg-black/70 flex items-center justify-center shadow-lg shadow-amber-500/40 animate-pulse">
+                <span className="font-pixel-title text-3xl sm:text-4xl text-amber-300 drop-shadow-[0_2px_8px_rgba(245,199,84,0.9)]">
+                  {countdown}
+                </span>
+              </div>
+              <span className="mt-2.5 px-2.5 py-0.5 bg-black/85 border border-amber-400/60 text-amber-200 text-[11px] font-pixel-title tracking-wider">
+                SIAP-SIAP!
+              </span>
+            </div>
+          )}
 
           {capturedUrl ? (
             /* Snap Preview */
@@ -242,19 +344,37 @@ export const CameraModal: React.FC<CameraModalProps> = ({
             <>
               <button
                 onClick={toggleFacingMode}
+                disabled={countdown !== null}
                 title="Ganti Kamera Depan/Belakang"
-                className="pixel-btn-dark p-2 text-xs font-bold cursor-pointer"
+                className={`pixel-btn-dark p-2 text-xs font-bold cursor-pointer ${
+                  countdown !== null ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               >
                 <SwitchCamera className="w-4 h-4" />
               </button>
 
               <button
-                onClick={handleTakeSnap}
+                onClick={handleStartCapture}
                 disabled={isLoading}
-                className="pixel-btn-green py-2 px-5 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer flex-1"
+                className={`py-2 px-5 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer flex-1 transition-all ${
+                  countdown !== null
+                    ? 'pixel-btn-dark border-red-500 text-red-300'
+                    : 'pixel-btn-green'
+                }`}
               >
-                <Camera className="w-4 h-4" />
-                <span>AMBIL FOTO</span>
+                {countdown !== null ? (
+                  <>
+                    <X className="w-4 h-4 text-red-400" />
+                    <span>BATAL ({countdown}s)</span>
+                  </>
+                ) : (
+                  <>
+                    <Camera className="w-4 h-4" />
+                    <span>
+                      AMBIL FOTO {selectedTimer > 0 ? `(${selectedTimer}s)` : ''}
+                    </span>
+                  </>
+                )}
               </button>
             </>
           )}
@@ -264,3 +384,4 @@ export const CameraModal: React.FC<CameraModalProps> = ({
     </div>
   );
 };
+
