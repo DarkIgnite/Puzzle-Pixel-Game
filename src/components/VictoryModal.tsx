@@ -1,6 +1,7 @@
 import confetti from 'canvas-confetti';
 import { ArrowRight, Clock, Grid, RotateCcw, Sparkles } from 'lucide-react';
 import React, { useEffect } from 'react';
+import { DEFAULT_LEVELS } from '../data/photos';
 import { GameMode, LevelConfig, Photo } from '../types';
 import { soundManager } from '../utils/audio';
 
@@ -98,7 +99,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
 
         {/* Action Buttons */}
         <div className="w-full flex flex-col gap-2">
-          {level.id < 3 ? (
+          {level.id < DEFAULT_LEVELS.length ? (
             <button
               onClick={() => {
                 soundManager.playClick();

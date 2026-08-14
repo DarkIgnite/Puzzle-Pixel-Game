@@ -150,7 +150,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="w-full bg-theme-main border-b-4 border-theme-box sticky top-0 z-30 px-3 py-2 font-['Pixelify_Sans',sans-serif] transition-colors duration-300">
+    <header className="w-full bg-theme-main/95 backdrop-blur-xs border-b-4 border-theme-box sticky top-0 z-50 px-3 py-2 font-['Pixelify_Sans',sans-serif] transition-colors duration-300 shadow-md">
       <div className="max-w-5xl mx-auto flex items-center justify-between">
         {/* Brand & Logo */}
         <button

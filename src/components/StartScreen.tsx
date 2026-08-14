@@ -1,8 +1,10 @@
 import {
+  ArrowRight,
   Camera,
   Check,
   Clock,
   Coffee,
+  Grid,
   Lock,
   Play,
   RefreshCw,
@@ -27,6 +29,7 @@ interface StartScreenProps {
   photos: Photo[];
   progressMap?: Record<number, LevelProgress>;
   onSelectLevel: (levelId: number) => void;
+  onOpenLevelSelect: () => void;
   onToggleGameMode: () => void;
   onSelectGameMode: (mode: GameMode) => void;
   onSelectTheme: (theme: ThemeMode) => void;
@@ -42,6 +45,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({
   photos,
   progressMap = {},
   onSelectLevel,
+  onOpenLevelSelect,
   onSelectGameMode,
   onUseDefaultPhotos,
   onUploadCustomPhotos,
@@ -150,7 +154,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({
   };
 
   const isLevelUnlocked = (level: LevelConfig): boolean => {
-    if (level.id <= 3) return true;
+    if (level.id === 1 || level.levelNumber === 1) return true;
     return !!safeProgressMap[level.id - 1]?.completed;
   };
 
@@ -243,11 +247,10 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                       onSelectGameMode('relaxed');
                       setShowModeMenu(false);
                     }}
-                    className={`w-full p-2 text-left text-xs font-bold flex items-center justify-between border transition-all cursor-pointer ${
-                      gameMode === 'relaxed'
+                    className={`w-full p-2 text-left text-xs font-bold flex items-center justify-between border transition-all cursor-pointer ${gameMode === 'relaxed'
                         ? 'pixel-box-inner border-theme-title text-theme-title'
                         : 'border-transparent hover:bg-theme-inner text-theme-sub'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-2">
                       <Coffee className="w-3.5 h-3.5 text-theme-title" />
@@ -269,11 +272,10 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                       onSelectGameMode('challenge');
                       setShowModeMenu(false);
                     }}
-                    className={`w-full p-2 text-left text-xs font-bold flex items-center justify-between border transition-all cursor-pointer ${
-                      gameMode === 'challenge'
+                    className={`w-full p-2 text-left text-xs font-bold flex items-center justify-between border transition-all cursor-pointer ${gameMode === 'challenge'
                         ? 'pixel-box-inner border-theme-title text-theme-title'
                         : 'border-transparent hover:bg-theme-inner text-theme-sub'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-2">
                       <Clock className="w-3.5 h-3.5 text-theme-title" />
@@ -306,11 +308,10 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                 soundManager.playClick();
                 onUseDefaultPhotos();
               }}
-              className={`p-2 border-2 text-[11px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${
-                !isUsingCustom
+              className={`p-2 border-2 text-[11px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${!isUsingCustom
                   ? 'border-theme-title bg-theme-main text-theme-title'
                   : 'border-theme-inner bg-theme-wall text-theme-sub hover:bg-theme-main'
-              }`}
+                }`}
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>PIXEL</span>
@@ -321,11 +322,10 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                 soundManager.playClick();
                 fileInputRef.current?.click();
               }}
-              className={`p-2 border-2 text-[11px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${
-                isUsingCustom
+              className={`p-2 border-2 text-[11px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${isUsingCustom
                   ? 'border-theme-title bg-theme-main text-theme-title'
                   : 'border-theme-inner bg-theme-wall text-theme-sub hover:bg-theme-main'
-              }`}
+                }`}
             >
               <Upload className="w-3.5 h-3.5" />
               <span>UPLOAD</span>
@@ -349,10 +349,25 @@ export const StartScreen: React.FC<StartScreenProps> = ({
         </div>
       </div>
 
-      {/* 3 Level Cards */}
+      {/* 3 Level Cards Section */}
       <div className="w-full">
-        <div className="font-pixel-title text-xs text-theme-title mb-3 text-center sm:text-left">
-          PILIH LEVEL (1-TAP PLAY):
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-3">
+          <div className="font-pixel-title text-xs text-theme-title text-center sm:text-left">
+            PILIH LEVEL (1-TAP PLAY):
+          </div>
+
+          <button
+            onClick={() => {
+              soundManager.playClick();
+              onOpenLevelSelect();
+            }}
+            className="pixel-btn px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 cursor-pointer hover:scale-105 transition-transform"
+            title="Buka Halaman Pilih Semua Level"
+          >
+            <Grid className="w-3.5 h-3.5" />
+            <span>PILIH LEVEL</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -384,8 +399,8 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                     </div>
                   )}
                   {!unlocked && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Lock className="w-8 h-8 text-theme-title opacity-80" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                      <Lock className="w-8 h-8 text-[#FFE17D] drop-shadow-[2px_2px_0px_#000]" />
                     </div>
                   )}
                 </div>
@@ -400,8 +415,8 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                 {/* Action button always at bottom */}
                 <div className="w-full mt-auto">
                   {!unlocked ? (
-                    <div className="w-full pixel-btn-dark py-2 text-xs font-bold flex items-center justify-center gap-1.5 opacity-60">
-                      <Lock className="w-3.5 h-3.5" />
+                    <div className="w-full pixel-btn-dark py-2 text-xs font-bold flex items-center justify-center gap-1.5 opacity-60 cursor-not-allowed">
+                      <Lock className="w-3.5 h-3.5 text-[#dfc7c0]" />
                       <span>TERKUNCI</span>
                     </div>
                   ) : level.requiresUpload && !uploadedPhoto ? (
@@ -422,7 +437,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                         className="pixel-btn-green py-2 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
                       >
                         <Camera className="w-3 h-3" />
-                        <span>KAMERA</span>
+                        <span>KAMERA 📸</span>
                       </button>
                     </div>
                   ) : (
@@ -441,6 +456,21 @@ export const StartScreen: React.FC<StartScreenProps> = ({
               </div>
             );
           })}
+        </div>
+
+        {/* Bottom Banner Button to Level Select Page */}
+        <div className="mt-5 flex justify-center">
+          {/* <button
+            onClick={() => {
+              soundManager.playClick();
+              onOpenLevelSelect();
+            }}
+            className="w-full sm:w-auto pixel-btn px-6 py-2.5 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md hover:scale-105 transition-all"
+          >
+            <Grid className="w-4 h-4" />
+            <span>PILIH LEVEL (LIHAT SEMUA LEVEL)</span>
+            <ArrowRight className="w-4 h-4" />
+          </button> */}
         </div>
       </div>
 

@@ -30,13 +30,37 @@ export const INITIAL_PHOTOS: Photo[] = [
     url: createProceduralCozyImage(2),
     placeholderPath: 'assets/photos/photo-3.jpg',
   },
+  {
+    id: 'photo-4',
+    name: 'Kucing & Perapian',
+    description: 'Kucing oranye tidur nyenyak di dekat perapian hangat berbatu.',
+    url: createProceduralCozyImage(3),
+    placeholderPath: 'assets/photos/photo-4.jpg',
+  },
+  {
+    id: 'photo-5',
+    name: 'Teras Senja Pixel',
+    description: 'Pemandangan senja pastel yang tenang dari balkon berlantai kayu.',
+    url: createProceduralCozyImage(4),
+    placeholderPath: 'assets/photos/photo-5.jpg',
+  },
+  {
+    id: 'photo-6',
+    name: 'Perpustakaan Mini',
+    description: 'Sudut baca buku hangat bertabur rak kayu dan lentera malam.',
+    url: createProceduralCozyImage(5),
+    placeholderPath: 'assets/photos/photo-6.jpg',
+  },
 ];
 
 /**
  * Default level configurations:
- * Level 1: 3x3 Grid (9 pieces)
- * Level 2: 4x4 Grid (16 pieces)
- * Level 3: 5x5 Grid (25 pieces)
+ * Level 1: 3x3 Grid (9 pieces) - Unlocked initially
+ * Level 2: 3x3 Grid (9 pieces) - Unlocked after completing Level 1
+ * Level 3: 4x4 Grid (16 pieces) - Unlocked after completing Level 2
+ * Level 4: 4x4 Grid (16 pieces) - Unlocked after completing Level 3
+ * Level 5: 5x5 Grid (25 pieces) - Unlocked after completing Level 4
+ * Level 6: 5x5 Grid (25 pieces) - Unlocked after completing Level 5
  */
 export const DEFAULT_LEVELS: LevelConfig[] = [
   {
@@ -52,19 +76,46 @@ export const DEFAULT_LEVELS: LevelConfig[] = [
     id: 2,
     levelNumber: 2,
     title: 'Level 2: Suasana Hangat',
-    subtitle: 'Grid 4x4 • 16 Potongan',
-    gridSize: 4,
+    subtitle: 'Grid 3x3 • 9 Potongan',
+    gridSize: 3,
     photoId: 'photo-2',
     defaultPhotoPath: 'assets/photos/photo-2.jpg',
   },
   {
     id: 3,
     levelNumber: 3,
-    title: 'Level 3: Fokus Dalam',
-    subtitle: 'Grid 5x5 • 25 Potongan',
-    gridSize: 5,
+    title: 'Level 3: Kafe Hujan',
+    subtitle: 'Grid 4x4 • 16 Potongan',
+    gridSize: 4,
     photoId: 'photo-3',
     defaultPhotoPath: 'assets/photos/photo-3.jpg',
+  },
+  {
+    id: 4,
+    levelNumber: 4,
+    title: 'Level 4: Kucing & Api',
+    subtitle: 'Grid 4x4 • 16 Potongan',
+    gridSize: 4,
+    photoId: 'photo-4',
+    defaultPhotoPath: 'assets/photos/photo-4.jpg',
+  },
+  {
+    id: 5,
+    levelNumber: 5,
+    title: 'Level 5: Teras Senja',
+    subtitle: 'Grid 5x5 • 25 Potongan',
+    gridSize: 5,
+    photoId: 'photo-5',
+    defaultPhotoPath: 'assets/photos/photo-5.jpg',
+  },
+  {
+    id: 6,
+    levelNumber: 6,
+    title: 'Level 6: Perpustakaan Mini',
+    subtitle: 'Grid 5x5 • 25 Potongan',
+    gridSize: 5,
+    photoId: 'photo-6',
+    defaultPhotoPath: 'assets/photos/photo-6.jpg',
   },
 ];
 

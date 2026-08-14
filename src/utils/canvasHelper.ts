@@ -193,7 +193,7 @@ export function createProceduralCozyImage(styleIndex: number = 0): string {
 
   pctx.imageSmoothingEnabled = false;
 
-  const idx = Math.abs(styleIndex) % 3;
+  const idx = Math.abs(styleIndex) % 6;
 
   if (idx === 0) {
     // Scene 0: "Kopi & Kamar Pixel" (Cozy Pixel Coffee Room)
@@ -297,7 +297,7 @@ export function createProceduralCozyImage(styleIndex: number = 0): string {
     pctx.fillRect(44, 30, 4, 16);
     pctx.fillRect(42, 20, 4, 4);
 
-  } else {
+  } else if (idx === 2) {
     // Scene 2: "Kafe Hujan Pixel" (Rainy Pixel Cafe)
     // Dark Rainy Background Outside
     pctx.fillStyle = '#17222B';
@@ -331,6 +331,135 @@ export function createProceduralCozyImage(styleIndex: number = 0): string {
     pctx.fillRect(42, 26, 12, 12);
     pctx.fillStyle = '#E0A96D';
     pctx.fillRect(44, 38, 8, 2);
+
+  } else if (idx === 3) {
+    // Scene 3: "Kucing & Perapian" (Cozy Fireplace & Sleeping Cat)
+    // Dark stone brick wall
+    pctx.fillStyle = '#1C1618';
+    pctx.fillRect(0, 0, 64, 64);
+    
+    // Fireplace Mantle & Hearth
+    pctx.fillStyle = '#4E3120';
+    pctx.fillRect(10, 14, 44, 6);
+    pctx.fillStyle = '#311E13';
+    pctx.fillRect(14, 20, 36, 30);
+    pctx.fillStyle = '#150A06';
+    pctx.fillRect(20, 26, 24, 24);
+
+    // Glowing Fire Embers & Flame
+    pctx.fillStyle = '#D9480F';
+    pctx.fillRect(26, 38, 12, 10);
+    pctx.fillStyle = '#FF922B';
+    pctx.fillRect(28, 36, 8, 8);
+    pctx.fillStyle = '#FFE066';
+    pctx.fillRect(30, 34, 4, 6);
+
+    // Wood Logs
+    pctx.fillStyle = '#5C3821';
+    pctx.fillRect(24, 44, 16, 4);
+
+    // Cozy Round Rug
+    pctx.fillStyle = '#8C6747';
+    pctx.fillRect(12, 50, 40, 12);
+    pctx.fillStyle = '#C68B59';
+    pctx.fillRect(16, 52, 32, 8);
+
+    // Sleeping Orange Cat
+    pctx.fillStyle = '#E07A5F';
+    pctx.fillRect(26, 52, 12, 6); // body
+    pctx.fillStyle = '#D9865A';
+    pctx.fillRect(36, 50, 6, 6); // head
+    pctx.fillStyle = '#FAF2E8';
+    pctx.fillRect(24, 54, 4, 3); // curled tail
+    pctx.fillStyle = '#3D2817';
+    pctx.fillRect(39, 52, 2, 1); // closed eye
+
+  } else if (idx === 4) {
+    // Scene 4: "Teras Senja Pixel" (Sunset Balcony View)
+    // Sunset Gradient Sky
+    pctx.fillStyle = '#2B1E3A';
+    pctx.fillRect(0, 0, 64, 16);
+    pctx.fillStyle = '#5C2D4E';
+    pctx.fillRect(0, 16, 64, 14);
+    pctx.fillStyle = '#9C4146';
+    pctx.fillRect(0, 30, 64, 12);
+    pctx.fillStyle = '#D96B43';
+    pctx.fillRect(0, 42, 64, 10);
+    pctx.fillStyle = '#F4A261';
+    pctx.fillRect(0, 52, 64, 12);
+
+    // Soft Pastel Sun
+    pctx.fillStyle = '#FFE8D6';
+    pctx.fillRect(24, 22, 16, 16);
+
+    // Distant Mountain Silhouette
+    pctx.fillStyle = '#3D1C34';
+    pctx.fillRect(0, 40, 18, 12);
+    pctx.fillRect(14, 34, 22, 18);
+    pctx.fillRect(32, 38, 20, 14);
+    pctx.fillRect(48, 36, 16, 16);
+
+    // Balcony Railing
+    pctx.fillStyle = '#1D130C';
+    pctx.fillRect(0, 50, 64, 3);
+    for (let x = 4; x < 64; x += 8) {
+      pctx.fillRect(x, 50, 2, 14);
+    }
+    pctx.fillRect(0, 61, 64, 3);
+
+    // Small Lantern on Railing
+    pctx.fillStyle = '#FFE17D';
+    pctx.fillRect(46, 44, 6, 6);
+    pctx.fillStyle = '#3D2414';
+    pctx.fillRect(45, 43, 8, 2);
+    pctx.fillRect(45, 49, 8, 2);
+
+  } else {
+    // Scene 5: "Perpustakaan Mini" (Cozy Library Bookshelf)
+    // Dark Wooden Bookshelf
+    pctx.fillStyle = '#22150C';
+    pctx.fillRect(0, 0, 64, 64);
+
+    // Shelves
+    pctx.fillStyle = '#4A2E1B';
+    pctx.fillRect(4, 18, 56, 4);
+    pctx.fillRect(4, 38, 56, 4);
+    pctx.fillRect(4, 58, 56, 4);
+
+    // Top Shelf Books
+    const topColors = ['#8A9A5B', '#C86D51', '#E0A96D', '#4A6B82', '#9C4146', '#D9865A'];
+    topColors.forEach((color, i) => {
+      pctx.fillStyle = color;
+      pctx.fillRect(8 + i * 8, 6, 6, 12);
+      pctx.fillStyle = '#FAF2E8';
+      pctx.fillRect(9 + i * 8, 8, 4, 1);
+    });
+
+    // Middle Shelf Books & Plant
+    const midColors = ['#D9865A', '#8A9A5B', '#E07A5F', '#526E48'];
+    midColors.forEach((color, i) => {
+      pctx.fillStyle = color;
+      pctx.fillRect(8 + i * 7, 24, 5, 14);
+    });
+    // Mini Succulent
+    pctx.fillStyle = '#8C6747';
+    pctx.fillRect(42, 30, 8, 8);
+    pctx.fillStyle = '#788B4B';
+    pctx.fillRect(44, 24, 4, 6);
+    pctx.fillRect(42, 26, 8, 2);
+
+    // Bottom Shelf Reading Lamp & Stack
+    pctx.fillStyle = '#FFE17D';
+    pctx.fillRect(10, 44, 10, 10);
+    pctx.fillStyle = '#C68B59';
+    pctx.fillRect(13, 54, 4, 4);
+
+    pctx.fillStyle = '#8A9A5B';
+    pctx.fillRect(28, 52, 18, 3);
+    pctx.fillStyle = '#C86D51';
+    pctx.fillRect(30, 49, 14, 3);
+    pctx.fillStyle = '#E0A96D';
+    pctx.fillRect(32, 46, 10, 3);
   }
 
   // Scale up low-res 64x64 canvas to high-res 512x512 canvas with crisp pixel art

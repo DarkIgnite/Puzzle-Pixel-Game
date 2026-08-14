@@ -44,7 +44,7 @@ export const CameraModal: React.FC<CameraModalProps> = ({
       setStream(mediaStream);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        videoRef.current.play().catch(() => {});
+        videoRef.current.play().catch(() => { });
       }
       setIsLoading(false);
     } catch (err) {
@@ -77,7 +77,7 @@ export const CameraModal: React.FC<CameraModalProps> = ({
 
     const video = videoRef.current;
     const canvas = canvasRef.current || document.createElement('canvas');
-    
+
     const size = Math.min(video.videoWidth || 640, video.videoHeight || 640);
     canvas.width = size;
     canvas.height = size;
@@ -107,7 +107,7 @@ export const CameraModal: React.FC<CameraModalProps> = ({
   const handleConfirmPhoto = async () => {
     if (!capturedUrl) return;
     soundManager.playVictory();
-    
+
     // Convert dataUrl to a blob/file and compress
     try {
       const res = await fetch(capturedUrl);
@@ -131,7 +131,7 @@ export const CameraModal: React.FC<CameraModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 font-['Pixelify_Sans',sans-serif]">
       <div className="pixel-box max-w-md w-full p-4 sm:p-5 relative flex flex-col items-center text-center max-h-[95vh] overflow-hidden">
-        
+
         {/* Hidden Fallback File Input */}
         <input
           ref={fileInputRef}
@@ -254,7 +254,7 @@ export const CameraModal: React.FC<CameraModalProps> = ({
                 className="pixel-btn-green py-2 px-5 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer flex-1"
               >
                 <Camera className="w-4 h-4" />
-                <span>AMBIL FOTO 📸</span>
+                <span>AMBIL FOTO</span>
               </button>
             </>
           )}

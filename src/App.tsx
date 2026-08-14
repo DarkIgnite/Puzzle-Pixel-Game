@@ -248,6 +248,15 @@ export default function App() {
     });
   };
 
+  // 10. Upload single photo for a specific level
+  const handleUploadPhotoForLevel = async (levelId: number, file: File) => {
+    const url = await processUploadedFile(file);
+    if (!url) return;
+    const targetLevel = DEFAULT_LEVELS.find((l) => l.id === levelId);
+    const photoId = targetLevel ? targetLevel.photoId : `photo-${levelId}`;
+    handleUploadPhoto(photoId, url);
+  };
+
   // Active level config & photo
   const activeLevel =
     DEFAULT_LEVELS.find((l) => l.id === activeLevelId) || DEFAULT_LEVELS[0];
@@ -256,9 +265,9 @@ export default function App() {
   return (
     <div
       data-theme={theme}
-      className="min-h-screen w-full bg-theme-main text-theme-main flex flex-col font-['Pixelify_Sans',sans-serif] cozy-pixel-bg overflow-x-hidden overflow-y-auto transition-colors duration-300"
+      className="min-h-screen w-full bg-theme-main text-theme-main flex flex-col font-['Pixelify_Sans',sans-serif] cozy-pixel-bg transition-colors duration-300 relative"
     >
-      {/* Top Navbar */}
+      {/* Top Sticky Navbar */}
       <Navbar
         currentScreen={currentScreen}
         gameMode={gameMode}
@@ -280,15 +289,18 @@ export default function App() {
             theme={theme}
             levels={DEFAULT_LEVELS}
             photos={photos}
+            progressMap={progressMap}
             onSelectLevel={(levelId) => {
               setActiveLevelId(levelId);
               setCurrentScreen('gameplay');
             }}
+            onOpenLevelSelect={() => setCurrentScreen('levelSelect')}
             onToggleGameMode={handleToggleGameMode}
             onSelectGameMode={handleSelectGameMode}
             onSelectTheme={handleSelectTheme}
             onUseDefaultPhotos={handleUseDefaultPhotos}
             onUploadCustomPhotos={handleUploadCustomPhotos}
+            onUploadPhotoForLevel={handleUploadPhotoForLevel}
           />
         )}
 
@@ -303,6 +315,7 @@ export default function App() {
             }}
             onBack={() => setCurrentScreen('start')}
             onOpenPhotoManager={() => setShowPhotoManager(true)}
+            onUploadPhotoForLevel={handleUploadPhotoForLevel}
           />
         )}
 
