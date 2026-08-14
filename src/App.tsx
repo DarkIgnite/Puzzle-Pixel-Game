@@ -267,22 +267,30 @@ export default function App() {
       data-theme={theme}
       className="min-h-screen w-full bg-theme-main text-theme-main flex flex-col font-['Pixelify_Sans',sans-serif] cozy-pixel-bg transition-colors duration-300 relative overflow-x-clip"
     >
-      {/* Top Sticky Navbar */}
-      <Navbar
-        currentScreen={currentScreen}
-        gameMode={gameMode}
-        theme={theme}
-        isMuted={isMuted}
-        onToggleGameMode={handleToggleGameMode}
-        onSelectGameMode={handleSelectGameMode}
-        onSelectTheme={handleSelectTheme}
-        onToggleMute={handleToggleMute}
-        onNavigateHome={() => setCurrentScreen('start')}
-        onOpenPhotoManager={() => setShowPhotoManager(true)}
-      />
+      {/* Top Sticky Navbar (hidden during gameplay for maximum screen space on mobile) */}
+      {currentScreen !== 'gameplay' && (
+        <Navbar
+          currentScreen={currentScreen}
+          gameMode={gameMode}
+          theme={theme}
+          isMuted={isMuted}
+          onToggleGameMode={handleToggleGameMode}
+          onSelectGameMode={handleSelectGameMode}
+          onSelectTheme={handleSelectTheme}
+          onToggleMute={handleToggleMute}
+          onNavigateHome={() => setCurrentScreen('start')}
+          onOpenPhotoManager={() => setShowPhotoManager(true)}
+        />
+      )}
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col items-center justify-start sm:justify-center p-2 sm:p-4 w-full">
+      <main
+        className={`flex-1 flex flex-col items-center justify-start sm:justify-center w-full ${
+          currentScreen === 'gameplay'
+            ? 'p-0 h-[100dvh] overflow-hidden'
+            : 'p-2 sm:p-4'
+        }`}
+      >
         {currentScreen === 'start' && (
           <StartScreen
             gameMode={gameMode}
@@ -325,6 +333,8 @@ export default function App() {
             level={activeLevel}
             photo={activePhoto}
             gameMode={gameMode}
+            isMuted={isMuted}
+            onToggleMute={handleToggleMute}
             onLevelComplete={handleLevelComplete}
             onNextLevel={() => {
               if (activeLevelId < DEFAULT_LEVELS.length) {
@@ -363,13 +373,15 @@ export default function App() {
         />
       )}
 
-      {/* Cozy Footer */}
-      <footer className="w-full text-center py-4 text-xs text-theme-sub opacity-80 border-t border-theme-inner">
-        <p>Created by • Ryan and Fikri</p>
-        <p>
-          <span className="font-sans">©</span> SMK TELKOM BANJARBARU 2026
-        </p>
-      </footer>
+      {/* Cozy Footer (hidden during gameplay) */}
+      {currentScreen !== 'gameplay' && (
+        <footer className="w-full text-center py-4 text-xs text-theme-sub opacity-80 border-t border-theme-inner">
+          <p>Created by • Ryan and Fikri</p>
+          <p>
+            <span className="font-sans">©</span> SMK TELKOM BANJARBARU 2026
+          </p>
+        </footer>
+      )}
     </div>
   );
 }

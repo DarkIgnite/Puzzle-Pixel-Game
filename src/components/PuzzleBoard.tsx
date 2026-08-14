@@ -8,6 +8,8 @@ import {
     Sparkles,
     Maximize2,
     Minimize2,
+    Volume2,
+    VolumeX,
 } from "lucide-react";
 import {
     GameMode,
@@ -28,6 +30,8 @@ interface PuzzleBoardProps {
     level: LevelConfig;
     photo: Photo;
     gameMode: GameMode;
+    isMuted?: boolean;
+    onToggleMute?: () => void;
     onLevelComplete: (stats: {
         timeSeconds: number;
         movesCount: number;
@@ -56,6 +60,8 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
     level,
     photo,
     gameMode,
+    isMuted,
+    onToggleMute,
     onLevelComplete,
     onNextLevel,
     onBackToLevels,
@@ -425,51 +431,50 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
     ).length;
 
     return (
-        // Outer: fills available viewport height (below navbar), no scroll
+        // Outer: fills available viewport height, compact no-scroll layout for mobile and desktop
         <div
             ref={containerRef}
             className={`w-full flex flex-col select-none font-['Pixelify_Sans',sans-serif] transition-all duration-200 puzzle-bg ${
                 isFullscreen
-                    ? "fixed inset-0 z-50 p-2 sm:p-4 overflow-hidden"
-                    : ""
+                    ? "fixed inset-0 z-50 p-1 sm:p-3 overflow-hidden"
+                    : "h-full min-h-[100dvh] max-h-[100dvh] p-1 sm:p-2.5 overflow-hidden"
             }`}
             style={{
-                height: isFullscreen
-                    ? "100vh"
-                    : "calc(100dvh - var(--navbar-h, 56px))",
+                height: isFullscreen ? "100vh" : "100dvh",
             }}
         >
             {/* ── Top Controls Bar ── */}
-            <div className="w-full pixel-box px-3 py-2 flex flex-wrap items-center justify-between gap-2 shrink-0">
+            <div className="w-full pixel-box px-2 py-1.5 sm:px-3 sm:py-2 flex items-center justify-between gap-1 sm:gap-2 shrink-0">
                 {/* Left: Back & Level Title */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 min-w-0">
                     <button
                         onClick={() => {
                             soundManager.playClick();
                             onBackToLevels();
                         }}
-                        className="pixel-btn px-2.5 py-1.5 flex items-center gap-1 text-xs font-bold cursor-pointer"
+                        title="Kembali ke Pilihan Level"
+                        className="pixel-btn px-2 py-1 flex items-center gap-1 text-xs font-bold cursor-pointer shrink-0"
                     >
                         <ArrowLeft className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">MENU</span>
+                        <span className="hidden md:inline">MENU</span>
                     </button>
 
-                    <div>
-                        <h2 className="font-pixel-title text-[10px] sm:text-xs text-theme-title leading-tight">
+                    <div className="min-w-0">
+                        <h2 className="font-pixel-title text-[9px] sm:text-xs text-theme-title leading-tight truncate">
                             {level.title}
                         </h2>
-                        <p className="text-[10px] text-theme-sub mt-0.5">
+                        <p className="text-[9px] sm:text-[10px] text-theme-sub mt-0.5 truncate">
                             Cocok: {correctCount}/{totalPieces}
                         </p>
                     </div>
                 </div>
 
-                {/* Center: Timer */}
-                <div className="flex items-center gap-2 pixel-box-inner px-2.5 py-1 text-xs font-bold text-theme-sub">
+                {/* Center: Timer / Mode */}
+                <div className="flex items-center gap-1 pixel-box-inner px-1.5 sm:px-2.5 py-0.5 sm:py-1 text-xs font-bold text-theme-sub shrink-0">
                     {gameMode === "challenge" ? (
                         <>
-                            <Clock className="w-3.5 h-3.5 text-theme-title animate-pulse" />
-                            <span>
+                            <Clock className="w-3 h-3 text-theme-title animate-pulse" />
+                            <span className="text-[11px] sm:text-xs">
                                 {Math.floor(timeSeconds / 60)
                                     .toString()
                                     .padStart(2, "0")}
@@ -481,14 +486,15 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                         </>
                     ) : (
                         <>
-                            <Sparkles className="w-3.5 h-3.5 text-theme-accent" />
-                            <span>SANTAI</span>
+                            <Sparkles className="w-3 h-3 text-theme-accent" />
+                            <span className="text-[10px] sm:text-xs hidden xs:inline">SANTAI</span>
                         </>
                     )}
                 </div>
 
-                {/* Right: Tools */}
-                <div className="flex items-center gap-1.5">
+                {/* Right: Tools & Action Controls */}
+                <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+                    {/* Hint Button */}
                     <button
                         onClick={handleUseHint}
                         disabled={
@@ -501,46 +507,66 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                                 ? `Bantuan (Sisa: ${hintsRemaining})`
                                 : "Bantuan Habis!"
                         }
-                        className="pixel-btn-green px-2 py-1.5 text-xs font-bold flex items-center gap-1 disabled:opacity-50 cursor-pointer"
+                        className="pixel-btn-green px-1.5 sm:px-2 py-1 text-xs font-bold flex items-center gap-1 disabled:opacity-50 cursor-pointer"
                     >
-                        <Lightbulb className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">HINT ({hintsRemaining})</span>
-                        <span className="sm:hidden">({hintsRemaining})</span>
+                        <Lightbulb className="w-3.5 h-3.5 text-yellow-200" />
+                        <span className="hidden sm:inline">HINT</span>
+                        <span className="text-[10px] sm:text-xs">({hintsRemaining})</span>
                     </button>
 
+                    {/* Photo Preview Button */}
                     <button
                         onClick={() => {
                             soundManager.playClick();
                             setShowPreviewModal(true);
                         }}
                         title="Lihat Foto Utuh"
-                        className="pixel-btn px-2 py-1.5 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                        className="pixel-btn px-1.5 sm:px-2 py-1 text-xs font-bold flex items-center gap-1 cursor-pointer"
                     >
                         <Eye className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">FOTO</span>
+                        <span className="hidden md:inline">FOTO</span>
                     </button>
 
+                    {/* Mute Toggle Button */}
+                    {onToggleMute && (
+                        <button
+                            onClick={() => {
+                                soundManager.playClick();
+                                onToggleMute();
+                            }}
+                            title={isMuted ? "Nyalakan Suara" : "Matikan Suara"}
+                            className="pixel-btn-dark p-1 sm:p-1.5 text-xs font-bold cursor-pointer"
+                        >
+                            {isMuted ? (
+                                <VolumeX className="w-3.5 h-3.5 text-[#dfc7c0]" />
+                            ) : (
+                                <Volume2 className="w-3.5 h-3.5 text-theme-accent" />
+                            )}
+                        </button>
+                    )}
+
+                    {/* Reset Level Button */}
                     <button
                         onClick={() => {
                             soundManager.playClick();
                             initPuzzle();
                         }}
                         title="Ulangi Level"
-                        className="pixel-btn-dark p-1.5 text-xs font-bold cursor-pointer"
+                        className="pixel-btn-dark p-1 sm:p-1.5 text-xs font-bold cursor-pointer"
                     >
                         <RotateCcw className="w-3.5 h-3.5" />
                     </button>
 
-                    {/* Fullscreen Toggle */}
+                    {/* Fullscreen Toggle Button */}
                     <button
                         onClick={toggleFullscreen}
                         title={isFullscreen ? "Keluar Fullscreen" : "Fullscreen"}
-                        className="pixel-btn-dark p-1.5 text-xs font-bold cursor-pointer"
+                        className="pixel-btn-dark p-1 sm:p-1.5 text-xs font-bold cursor-pointer"
                     >
                         {isFullscreen ? (
-                            <Minimize2 className="w-3.5 h-3.5" />
+                            <Minimize2 className="w-3.5 h-3.5 text-theme-accent" />
                         ) : (
-                            <Maximize2 className="w-3.5 h-3.5" />
+                            <Maximize2 className="w-3.5 h-3.5 text-theme-title" />
                         )}
                     </button>
                 </div>
@@ -560,21 +586,21 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                     </div>
                 </div>
             ) : (
-                // Responsive layout: column on mobile, row on landscape/desktop
-                <div className="flex-1 min-h-0 flex flex-col landscape:flex-row gap-2 p-2">
+                // Responsive layout: column on mobile portrait, row on landscape/desktop
+                <div className="flex-1 min-h-0 flex flex-col landscape:flex-row gap-1.5 sm:gap-2 p-0.5 sm:p-1.5 overflow-hidden">
 
                     {/* ── Puzzle Grid ── */}
-                    <div className="flex-1 min-h-0 flex items-center justify-center">
+                    <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
                         <div
                             ref={boardRef}
-                            className="pixel-box p-2 relative shrink-0 transition-all duration-200"
+                            className="pixel-box p-1.5 sm:p-2 relative shrink-0 transition-all duration-200"
                             style={{
                                 width: isFullscreen
-                                    ? "min(95vw, calc(100vh - 120px))"
-                                    : "min(100%, calc(100dvh - var(--navbar-h, 56px) - 130px))",
+                                    ? "min(95vw, calc(100vh - 100px))"
+                                    : "min(100%, calc(100dvh - 165px))",
                                 maxHeight: isFullscreen
-                                    ? "calc(100vh - 120px)"
-                                    : "calc(100dvh - var(--navbar-h, 56px) - 130px)",
+                                    ? "calc(100vh - 100px)"
+                                    : "calc(100dvh - 165px)",
                                 aspectRatio: "1 / 1",
                             }}
                         >
@@ -657,19 +683,19 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                     </div>
 
                     {/* ── Piece Tray ── */}
-                    <div className={`pixel-box p-2.5 shrink-0 flex flex-col min-h-0 transition-all duration-200 ${
+                    <div className={`pixel-box p-1.5 sm:p-2.5 shrink-0 flex flex-col min-h-0 transition-all duration-200 ${
                         isFullscreen
-                            ? "landscape:w-[26%] landscape:min-w-[200px] landscape:max-w-[300px] max-h-[30vh] landscape:max-h-none"
-                            : "landscape:w-[24%] landscape:min-w-[160px] landscape:max-w-[240px] max-h-[28vh] landscape:max-h-none"
+                            ? "landscape:w-[26%] landscape:min-w-[200px] landscape:max-w-[300px] max-h-[32vh] landscape:max-h-none"
+                            : "landscape:w-[24%] landscape:min-w-[160px] landscape:max-w-[240px] max-h-[30vh] sm:max-h-[32vh] landscape:max-h-none"
                     }`}>
-                        <div className="flex items-center justify-between mb-2 px-1 shrink-0 border-b border-theme-inner pb-1.5">
+                        <div className="flex items-center justify-between mb-1.5 px-1 shrink-0 border-b border-theme-inner pb-1">
                             <div className="flex items-center gap-1.5">
                                 <span className="w-2 h-2 rounded-full bg-theme-accent animate-pulse" />
-                                <span className="font-pixel-title text-[10px] sm:text-xs text-theme-title uppercase tracking-wide">
+                                <span className="font-pixel-title text-[9px] sm:text-xs text-theme-title uppercase tracking-wide">
                                     TRAY PUZZLE
                                 </span>
                             </div>
-                            <span className="text-[10px] bg-theme-wall border border-theme-inner px-1.5 py-0.5 font-bold text-theme-title">
+                            <span className="text-[9px] sm:text-[10px] bg-theme-wall border border-theme-inner px-1.5 py-0.5 font-bold text-theme-title">
                                 {trayPieces.length} SISA
                             </span>
                         </div>

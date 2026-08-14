@@ -150,25 +150,25 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="w-full bg-theme-main border-b-4 border-theme-box sticky sticky-nav top-0 z-50 px-3 py-2 font-['Pixelify_Sans',sans-serif] transition-colors duration-300">
-      <div className="max-w-5xl mx-auto flex items-center justify-between">
+    <header className="w-full bg-theme-main border-b-4 border-theme-box sticky sticky-nav top-0 z-50 px-2 py-1.5 sm:px-3 sm:py-2 font-['Pixelify_Sans',sans-serif] transition-colors duration-300">
+      <div className="max-w-5xl mx-auto flex items-center justify-between gap-1">
         {/* Brand & Logo */}
         <button
           onClick={() => {
             soundManager.playClick();
             onNavigateHome();
           }}
-          className="flex items-center gap-2 text-left group focus:outline-none cursor-pointer"
+          className="flex items-center gap-1.5 sm:gap-2 text-left group focus:outline-none cursor-pointer min-w-0"
         >
-          <div className="w-9 h-9  p-0.5 flex items-center justify-center overflow-hidden">
+          <div className="w-7 h-7 sm:w-9 sm:h-9 p-0.5 flex items-center justify-center overflow-hidden shrink-0">
             <img
               src="/Piece.webp"
               alt="Logo"
               className="w-full h-full object-contain"
             />
           </div>
-          <div>
-            <h1 className="font-pixel-title text-xs sm:text-sm text-theme-title flex items-center gap-1.5">
+          <div className="min-w-0">
+            <h1 className="font-pixel-title text-[10px] sm:text-sm text-theme-title flex items-center gap-1.5 truncate">
               PIXEL PUZZLE
             </h1>
             <p className="text-[10px] text-theme-sub hidden sm:block">
@@ -178,7 +178,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </button>
 
         {/* Right Action Controls */}
-        <div className="flex items-center gap-2 relative">
+        <div className="flex items-center gap-1 sm:gap-2 relative shrink-0">
           {/* Home Button if inside game */}
           {currentScreen !== 'start' && (
             <button
@@ -187,7 +187,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onNavigateHome();
               }}
               title="Kembali ke Beranda"
-              className="pixel-btn-dark px-2.5 py-1 text-xs font-bold flex items-center gap-1 cursor-pointer"
+              className="pixel-btn-dark px-1.5 sm:px-2.5 py-1 text-[11px] sm:text-xs font-bold flex items-center gap-1 cursor-pointer"
             >
               <Home className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">MENU</span>
@@ -203,7 +203,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 setShowThemeMenu(false);
               }}
               title="Pilih Mode Game (Santai, Tantangan)"
-              className="pixel-btn px-2.5 py-1 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+              className="pixel-btn px-1.5 sm:px-2.5 py-1 text-[11px] sm:text-xs font-bold flex items-center gap-1 sm:gap-1.5 cursor-pointer"
             >
               {modeLabels[gameMode]?.icon}
               <span className="hidden sm:inline">
@@ -267,7 +267,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 setShowModeMenu(false);
               }}
               title="Pilih Tema (Dark, Light)"
-              className="pixel-btn-dark px-2.5 py-1 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+              className="pixel-btn-dark px-1.5 sm:px-2.5 py-1 text-[11px] sm:text-xs font-bold flex items-center gap-1 sm:gap-1.5 cursor-pointer"
             >
               <Palette className="w-3.5 h-3.5 text-theme-title" />
               <span className="hidden sm:inline">
