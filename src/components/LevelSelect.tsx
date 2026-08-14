@@ -313,7 +313,7 @@ export const LevelSelect: React.FC<LevelSelectProps> = ({
                     className="pixel-btn-green py-2 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
                   >
                     <Camera className="w-3 h-3" />
-                    <span>KAMERA 📸</span>
+                    <span>KAMERA</span>
                   </button>
                 </div>
               ) : (
