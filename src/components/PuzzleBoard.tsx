@@ -44,8 +44,6 @@ interface DragState {
     startY: number;
     x: number;
     y: number;
-    /** Di layar sentuh, bayangan potongan dinaikkan agar tidak tertutup jari */
-    lift: number;
     size: number;
     moved: boolean;
 }
@@ -338,6 +336,26 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
         setSelectedPieceId((prev) => (prev === pieceId ? null : pieceId));
     };
 
+    // Sentuhan pada potongan hanya dipakai untuk scroll kalau tray memang bisa di-scroll.
+    // Kalau tidak, tarikan ke arah mana pun (termasuk curam) harus memindahkan potongan.
+    const trayScrollRef = useRef<HTMLDivElement>(null);
+    const [trayScrollable, setTrayScrollable] = useState(false);
+
+    useEffect(() => {
+        const el = trayScrollRef.current;
+        if (!el) return;
+        const update = () =>
+            setTrayScrollable(
+                el.scrollHeight > el.clientHeight + 1 ||
+                    el.scrollWidth > el.clientWidth + 1,
+            );
+        update();
+        const observer = new ResizeObserver(update);
+        observer.observe(el);
+        if (el.firstElementChild) observer.observe(el.firstElementChild);
+        return () => observer.disconnect();
+    });
+
     // 4. Pointer Events for Touchscreen & Mouse
     const handlePointerDown = (
         e: React.PointerEvent<HTMLElement>,
@@ -358,7 +376,6 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
             startY: e.clientY,
             x: e.clientX,
             y: e.clientY,
-            lift: e.pointerType === "touch" ? size * 0.6 : 0,
             size,
             moved: false,
         };
@@ -393,7 +410,7 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
             if (moved) {
                 setSelectedPieceId(null);
                 setDrag(next);
-                setHoveredSlotIndex(findSlot(next.x, next.y - next.lift));
+                setHoveredSlotIndex(findSlot(next.x, next.y));
             }
         },
         up: (e) => {
@@ -408,7 +425,7 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                 return;
             }
 
-            const slot = findSlot(e.clientX, e.clientY - current.lift);
+            const slot = findSlot(e.clientX, e.clientY);
             if (slot !== null) {
                 movePiece(current.pieceId, slot);
             } else if (isInside(trayRef.current, e.clientX, e.clientY)) {
@@ -828,6 +845,7 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                         ) : (
                             <div
                                 data-tray-scroll
+                                ref={trayScrollRef}
                                 className="landscape:flex-1 min-h-0 overflow-auto custom-scrollbar"
                             >
                                 <div className="grid gap-2 p-1 portrait:grid-flow-col portrait:grid-rows-2 portrait:[@media(max-height:700px)]:grid-rows-1 portrait:auto-cols-[68px] portrait:sm:auto-cols-[96px] portrait:w-max landscape:grid-cols-2 lg:landscape:grid-cols-3">
@@ -845,7 +863,11 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                                                 // Klik dari keyboard (Enter/Spasi)
                                                 if (e.detail === 0) handleTap(piece.id);
                                             }}
-                                            className={`aspect-square pixel-box-inner p-1 cursor-grab active:cursor-grabbing portrait:touch-pan-x landscape:touch-pan-y ${
+                                            className={`aspect-square pixel-box-inner p-1 cursor-grab active:cursor-grabbing ${
+                                                trayScrollable
+                                                    ? "portrait:touch-pan-x landscape:touch-pan-y"
+                                                    : "touch-none"
+                                            } ${
                                                 selectedPieceId === piece.id
                                                     ? "!border-yellow-400 ring-4 ring-yellow-300"
                                                     : "hover:border-theme-title"
@@ -866,13 +888,13 @@ export const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                 </div>
             )}
 
-            {/* Floating Dragged Piece Preview */}
+            {/* Floating Dragged Piece Preview: titik tengahnya tepat di jari/kursor */}
             {drag && (
                 <div
                     className="fixed pointer-events-none z-50 overflow-hidden border-2 border-theme-title shadow-[4px_4px_0px_#000] -translate-x-1/2 -translate-y-1/2 opacity-90"
                     style={{
                         left: drag.x,
-                        top: drag.y - drag.lift,
+                        top: drag.y,
                         width: drag.size,
                         height: drag.size,
                     }}
