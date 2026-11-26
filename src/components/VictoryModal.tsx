@@ -11,6 +11,7 @@ interface VictoryModalProps {
   imageUrl: string;
   gameMode: GameMode;
   timeSeconds: number;
+  previousBest: number | null;
   movesCount: number;
   onNextLevel: () => void;
   onBackToLevels: () => void;
@@ -23,6 +24,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
   imageUrl,
   gameMode,
   timeSeconds,
+  previousBest,
   movesCount,
   onNextLevel,
   onBackToLevels,
@@ -41,30 +43,30 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
     }
   }, []);
 
+  const formatDuration = (s: number) => `${Math.floor(s / 60)}m ${s % 60}s`;
+  const isChallenge = gameMode === 'challenge';
+  const isNewRecord =
+    isChallenge && (!previousBest || timeSeconds < previousBest);
+
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 font-['Pixelify_Sans',sans-serif]">
-      <div className="pixel-box max-w-md w-full p-6 relative flex flex-col items-center text-center">
+      <div className="pixel-box max-w-md w-full max-h-[95dvh] overflow-y-auto p-5 relative flex flex-col items-center text-center">
         {/* Floating Badge */}
-        <div className="w-12 h-12 pixel-btn-green flex items-center justify-center shadow-[3px_3px_0px_#000] mb-3 animate-bounce">
+        <div className="w-12 h-12 shrink-0 pixel-btn-green flex items-center justify-center shadow-[3px_3px_0px_#000] mb-3 animate-bounce">
           <Sparkles className="w-6 h-6" />
         </div>
 
-        <div className="font-pixel-title text-xs text-theme-title mb-1">
-          LEVEL SELESAI!
-        </div>
-
         <h2 className="font-pixel-title text-base text-theme-title mb-2">
-          SELAMAT! PUZZLE COZY!
+          HEBAT! PUZZLE SELESAI
         </h2>
 
-        <p className="text-xs text-theme-sub mb-4">
-          Kamu telah menyusun "
-          <span className="text-theme-title">{photo.name}</span>" dengan
-          sempurna!
+        <p className="text-sm text-theme-sub mb-4">
+          Kamu berhasil menyusun "
+          <span className="text-theme-title">{photo.name}</span>"
         </p>
 
         {/* Full Image Showcase */}
-        <div className="w-full max-w-[220px] aspect-square pixel-box-inner shadow-[4px_4px_0px_#000] mb-4">
+        <div className="w-[min(220px,32dvh)] shrink-0 aspect-square pixel-box-inner shadow-[4px_4px_0px_#000] mb-4">
           <img
             src={imageUrl}
             alt={photo.name}
@@ -90,12 +92,18 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
               WAKTU
             </span>
             <span className="font-pixel-title text-xs text-theme-title">
-              {gameMode === 'challenge'
-                ? `${Math.floor(timeSeconds / 60)}m ${timeSeconds % 60}s`
-                : 'SANTAI'}
+              {isChallenge ? formatDuration(timeSeconds) : 'SANTAI'}
             </span>
           </div>
         </div>
+
+        {isChallenge && (
+          <p className="text-sm font-bold text-theme-title mb-4">
+            {isNewRecord
+              ? 'REKOR BARU!'
+              : `Rekor terbaik: ${formatDuration(previousBest as number)}`}
+          </p>
+        )}
 
         {/* Action Buttons */}
         <div className="w-full flex flex-col gap-2">
@@ -135,7 +143,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
               }}
               className="pixel-btn py-2 text-xs font-bold cursor-pointer"
             >
-              MENU
+              PILIH LEVEL
             </button>
           </div>
         </div>

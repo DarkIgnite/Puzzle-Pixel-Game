@@ -6,18 +6,30 @@ import { processUploadedFile } from '../utils/canvasHelper';
 interface CameraModalProps {
   onCapturePhoto: (dataUrl: string, fileName: string) => void;
   onClose: () => void;
+  /** Foto langsung dipakai otomatis sesaat setelah diambil */
+  autoUse?: boolean;
+  /** Jika diisi, muncul tombol untuk main tanpa foto baru */
+  onSkip?: () => void;
 }
+
+/** Jeda sebelum foto dipakai otomatis, supaya sempat menekan "ULANGI" */
+const AUTO_USE_DELAY_MS = 2000;
 
 export const CameraModal: React.FC<CameraModalProps> = ({
   onCapturePhoto,
   onClose,
+  autoUse = false,
+  onSkip,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const countdownIntervalRef = useRef<number | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const requestRef = useRef(0);
+  const isOpenRef = useRef(true);
+  const isConfirmingRef = useRef(false);
 
-  const [stream, setStream] = useState<MediaStream | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [capturedUrl, setCapturedUrl] = useState<string | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -34,16 +46,21 @@ export const CameraModal: React.FC<CameraModalProps> = ({
     setCountdown(null);
   };
 
+  // Matikan kamera & batalkan permintaan kamera yang masih berjalan
+  const stopStream = () => {
+    requestRef.current += 1;
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+  };
+
   // Start webcam stream
   const startCamera = async (facing: 'user' | 'environment') => {
     setIsLoading(true);
     setCameraError(null);
     cancelCountdown();
+    stopStream();
+    const request = requestRef.current;
     try {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
-
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: facing,
@@ -53,13 +70,20 @@ export const CameraModal: React.FC<CameraModalProps> = ({
         audio: false,
       });
 
-      setStream(mediaStream);
+      // Modal sudah ditutup atau kamera sudah diganti: matikan lagi
+      if (request !== requestRef.current) {
+        mediaStream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+
+      streamRef.current = mediaStream;
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
         videoRef.current.play().catch(() => { });
       }
       setIsLoading(false);
     } catch (err) {
+      if (request !== requestRef.current) return;
       console.error('Camera access error:', err);
       setCameraError('Tidak dapat mengakses kamera. Pastikan izin kamera telah diberikan.');
       setIsLoading(false);
@@ -70,11 +94,31 @@ export const CameraModal: React.FC<CameraModalProps> = ({
     startCamera(facingMode);
     return () => {
       cancelCountdown();
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
+      stopStream();
     };
   }, [facingMode]);
+
+  // Setelah "ULANGI", elemen video dibuat ulang, jadi stream dipasang lagi
+  useEffect(() => {
+    if (!capturedUrl && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch(() => { });
+    }
+  }, [capturedUrl]);
+
+  useEffect(() => {
+    isOpenRef.current = true;
+    return () => {
+      isOpenRef.current = false;
+    };
+  }, []);
+
+  // Mode otomatis: setelah foto diambil, langsung dipakai
+  useEffect(() => {
+    if (!autoUse || !capturedUrl) return;
+    const timer = window.setTimeout(handleConfirmPhoto, AUTO_USE_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [autoUse, capturedUrl]);
 
   const toggleFacingMode = () => {
     soundManager.playClick();
@@ -156,27 +200,37 @@ export const CameraModal: React.FC<CameraModalProps> = ({
   };
 
   const handleConfirmPhoto = async () => {
-    if (!capturedUrl) return;
-    soundManager.playVictory();
+    // Cegah foto dipakai dua kali (tombol ditekan saat hitungan otomatis)
+    if (!capturedUrl || isConfirmingRef.current) return;
+    isConfirmingRef.current = true;
+    soundManager.playSnap();
 
     // Convert dataUrl to a blob/file and compress
+    let finalUrl = capturedUrl;
     try {
       const res = await fetch(capturedUrl);
       const blob = await res.blob();
       const file = new File([blob], `kamera-puzzle-${Date.now()}.jpg`, { type: 'image/jpeg' });
-      const processedUrl = await processUploadedFile(file);
-      onCapturePhoto(processedUrl, `Foto Kamera (${new Date().toLocaleTimeString()})`);
+      finalUrl = await processUploadedFile(file);
     } catch {
-      onCapturePhoto(capturedUrl, `Foto Kamera (${new Date().toLocaleTimeString()})`);
+      // Pakai foto asli jika kompresi gagal
     }
+    // Modal sudah ditutup selagi foto diproses: batalkan
+    if (!isOpenRef.current) return;
+    onCapturePhoto(finalUrl, `Foto Kamera (${new Date().toLocaleTimeString()})`);
   };
 
   const handleFallbackFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     soundManager.playSnap();
-    const dataUrl = await processUploadedFile(file);
-    onCapturePhoto(dataUrl, file.name.replace(/\.[^/.]+$/, ''));
+    try {
+      const dataUrl = await processUploadedFile(file);
+      onCapturePhoto(dataUrl, file.name.replace(/\.[^/.]+$/, ''));
+    } catch {
+      setCameraError('Foto itu tidak bisa dibaca. Coba pilih file JPG atau PNG.');
+    }
+    e.target.value = '';
   };
 
   const timerOptions = [
@@ -188,14 +242,13 @@ export const CameraModal: React.FC<CameraModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 font-['Pixelify_Sans',sans-serif]">
-      <div className="pixel-box max-w-md w-full p-4 sm:p-5 relative flex flex-col items-center text-center max-h-[95vh] overflow-hidden">
+      <div className="pixel-box max-w-md w-full p-4 sm:p-5 [@media(max-height:500px)]:!p-2.5 [@media(max-height:500px)]:!max-w-2xl [@media(max-height:500px)]:grid [@media(max-height:500px)]:grid-cols-[auto_minmax(0,1fr)] [@media(max-height:500px)]:grid-rows-[repeat(4,auto)_1fr] [@media(max-height:500px)]:gap-x-3 relative flex flex-col items-center text-center max-h-[95dvh] overflow-y-auto">
 
         {/* Hidden Fallback File Input */}
         <input
           ref={fileInputRef}
           type="file"
           accept="image/*"
-          capture="user"
           onChange={handleFallbackFileUpload}
           className="hidden"
         />
@@ -205,27 +258,28 @@ export const CameraModal: React.FC<CameraModalProps> = ({
           onClick={() => {
             soundManager.playClick();
             cancelCountdown();
-            if (stream) stream.getTracks().forEach((track) => track.stop());
+            stopStream();
             onClose();
           }}
+          aria-label="Tutup kamera"
           className="absolute top-3 right-3 pixel-btn-dark p-1 text-xs font-bold cursor-pointer z-20"
         >
           <X className="w-4 h-4" />
         </button>
 
         {/* Header */}
-        <div className="flex items-center gap-1.5 text-theme-title text-xs font-bold uppercase mb-1">
+        <div className="flex items-center gap-1.5 text-theme-title text-xs font-bold uppercase mb-1 [@media(max-height:500px)]:hidden">
           <Camera className="w-4 h-4" />
           <span>KAMERA PIXEL</span>
         </div>
 
-        <h2 className="font-pixel-title text-sm sm:text-base text-theme-title mb-2">
+        <h2 className="font-pixel-title text-sm sm:text-base text-theme-title mb-2 [@media(max-height:500px)]:text-xs [@media(max-height:500px)]:col-start-2 [@media(max-height:500px)]:min-h-8 [@media(max-height:500px)]:px-8">
           AMBIL FOTO KAMERA
         </h2>
 
         {/* Timer Selection Bar (only when live camera and not yet captured) */}
         {!capturedUrl && !cameraError && (
-          <div className="w-full flex items-center justify-between px-2.5 py-1.5 mb-3 pixel-box-inner text-xs">
+          <div className="w-full shrink-0 flex items-center justify-between px-2.5 py-1.5 mb-3 pixel-box-inner text-xs [@media(max-height:500px)]:mb-2 [@media(max-height:500px)]:py-1 [@media(max-height:500px)]:col-start-2">
             <div className="flex items-center gap-1.5 text-theme-sub text-[11px] font-bold">
               <Timer className="w-3.5 h-3.5 text-theme-title" />
               <span>TIMER:</span>
@@ -253,7 +307,7 @@ export const CameraModal: React.FC<CameraModalProps> = ({
         )}
 
         {/* Camera Display Box */}
-        <div className="w-full aspect-square pixel-box-inner overflow-hidden relative mb-4 bg-black flex items-center justify-center">
+        <div className="w-[min(100%,55dvh)] [@media(max-height:500px)]:w-[min(75dvh,45vw)] [@media(max-height:500px)]:col-start-1 [@media(max-height:500px)]:row-start-1 [@media(max-height:500px)]:row-span-5 shrink-0 aspect-square pixel-box-inner overflow-hidden relative mb-4 [@media(max-height:500px)]:mb-0 bg-black flex items-center justify-center">
           {/* Flash animation layer */}
           {isFlashing && <div className="absolute inset-0 bg-white z-30 animate-ping" />}
 
@@ -288,7 +342,7 @@ export const CameraModal: React.FC<CameraModalProps> = ({
                 className="pixel-btn-green px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
               >
                 <Upload className="w-4 h-4" />
-                <span>PILIH DARI GALERI / KAMERA HP</span>
+                <span>PILIH FOTO DARI PERANGKAT</span>
               </button>
             </div>
           ) : (
@@ -312,8 +366,14 @@ export const CameraModal: React.FC<CameraModalProps> = ({
           )}
         </div>
 
+        {autoUse && capturedUrl && (
+          <p role="status" className="text-sm font-bold text-theme-title mb-3 [@media(max-height:500px)]:mb-2 [@media(max-height:500px)]:col-start-2">
+            Foto siap! Puzzle dimulai otomatis...
+          </p>
+        )}
+
         {/* Action Controls */}
-        <div className="w-full flex items-center justify-center gap-2">
+        <div className="w-full flex items-center justify-center gap-2 [@media(max-height:500px)]:col-start-2">
           {capturedUrl ? (
             <>
               <button
@@ -329,7 +389,7 @@ export const CameraModal: React.FC<CameraModalProps> = ({
                 className="pixel-btn-green px-4 py-2 text-xs font-bold flex items-center gap-1.5 cursor-pointer flex-1 justify-center"
               >
                 <Check className="w-4 h-4" />
-                <span>PAKAI FOTO INI</span>
+                <span>{autoUse ? 'MAIN SEKARANG' : 'PAKAI FOTO INI'}</span>
               </button>
             </>
           ) : cameraError ? (
@@ -379,6 +439,19 @@ export const CameraModal: React.FC<CameraModalProps> = ({
             </>
           )}
         </div>
+
+        {onSkip && !capturedUrl && (
+          <button
+            onClick={() => {
+              soundManager.playClick();
+              cancelCountdown();
+              onSkip();
+            }}
+            className="mt-3 [@media(max-height:500px)]:mt-2 w-full shrink-0 pixel-btn px-3 py-2.5 [@media(max-height:500px)]:py-1.5 [@media(max-height:500px)]:col-start-2 text-xs font-bold cursor-pointer"
+          >
+            LEWATI, PAKAI GAMBAR YANG ADA
+          </button>
+        )}
 
       </div>
     </div>

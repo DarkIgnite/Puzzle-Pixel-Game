@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   DEFAULT_LEVELS,
   INITIAL_PHOTOS,
@@ -14,6 +14,8 @@ import {
 import { soundManager } from './utils/audio';
 import { processUploadedFile } from './utils/canvasHelper';
 
+import { CameraModal } from './components/CameraModal';
+import { ConfirmDialog } from './components/ConfirmDialog';
 import { LevelSelect } from './components/LevelSelect';
 import { Navbar } from './components/Navbar';
 import { PhotoManagerModal } from './components/PhotoManagerModal';
@@ -24,96 +26,101 @@ const LOCAL_STORAGE_PROGRESS_KEY = 'cozy_puzzle_progress_v1';
 const LOCAL_STORAGE_PHOTOS_KEY = 'cozy_puzzle_photos_v1';
 const LOCAL_STORAGE_MODE_KEY = 'cozy_puzzle_mode_v1';
 const LOCAL_STORAGE_THEME_KEY = 'cozy_puzzle_theme_v1';
+const LOCAL_STORAGE_MUTE_KEY = 'cozy_puzzle_muted_v1';
+
+const readStorage = (key: string): string | null => {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+const writeStorage = (key: string, value: string | null): boolean => {
+  try {
+    if (value === null) localStorage.removeItem(key);
+    else localStorage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const loadJson = <T,>(key: string, fallback: T): T => {
+  try {
+    const saved = readStorage(key);
+    return saved ? (JSON.parse(saved) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+};
 
 export default function App() {
-  // Application States
+  // Application States (langsung diisi dari data tersimpan)
   const [currentScreen, setCurrentScreen] = useState<ScreenState>('start');
   const [activeLevelId, setActiveLevelId] = useState<number>(1);
-  const [gameMode, setGameMode] = useState<GameMode>('relaxed');
-  const [theme, setTheme] = useState<ThemeMode>('light');
-  const [isMuted, setIsMuted] = useState<boolean>(false);
+  const [gameMode, setGameMode] = useState<GameMode>(() =>
+    readStorage(LOCAL_STORAGE_MODE_KEY) === 'challenge'
+      ? 'challenge'
+      : 'relaxed',
+  );
+  const [theme, setTheme] = useState<ThemeMode>(() =>
+    readStorage(LOCAL_STORAGE_THEME_KEY) === 'dark' ? 'dark' : 'light',
+  );
+  const [isMuted, setIsMuted] = useState<boolean>(() => {
+    const muted = readStorage(LOCAL_STORAGE_MUTE_KEY) === '1';
+    soundManager.setMuted(muted);
+    return muted;
+  });
   const [showPhotoManager, setShowPhotoManager] = useState<boolean>(false);
+  const [confirmAction, setConfirmAction] = useState<
+    'newPlayer' | 'defaultPhotos' | null
+  >(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  // Level yang menunggu foto sebelum dimainkan
+  const [cameraLevelId, setCameraLevelId] = useState<number | null>(null);
 
   // Photos Catalog (Initial + Saved overrides)
-  const [photos, setPhotos] = useState<Photo[]>(INITIAL_PHOTOS);
+  const [photos, setPhotos] = useState<Photo[]>(() => {
+    const saved = loadJson<Photo[]>(LOCAL_STORAGE_PHOTOS_KEY, INITIAL_PHOTOS);
+    return Array.isArray(saved) ? saved : INITIAL_PHOTOS;
+  });
+  const photosRef = useRef(photos);
 
   // Level Progress
   const [progressMap, setProgressMap] = useState<Record<number, LevelProgress>>(
-    {},
+    () => loadJson(LOCAL_STORAGE_PROGRESS_KEY, {}),
   );
 
-  // 1. Load initial saved data from LocalStorage
+  // 1. Terapkan tema ke dokumen
   useEffect(() => {
-    try {
-      // Saved theme
-      const savedTheme = localStorage.getItem(LOCAL_STORAGE_THEME_KEY);
-      if (savedTheme && (savedTheme === 'dark' || savedTheme === 'light')) {
-        setTheme(savedTheme as ThemeMode);
-        document.documentElement.setAttribute('data-theme', savedTheme);
-      } else {
-        setTheme('light');
-        document.documentElement.setAttribute('data-theme', 'light');
-      }
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
-      // Saved game mode
-      const savedMode = localStorage.getItem(
-        LOCAL_STORAGE_MODE_KEY,
-      ) as GameMode | null;
-      if (savedMode) setGameMode(savedMode);
-
-      // Saved progress
-      const savedProgress = localStorage.getItem(LOCAL_STORAGE_PROGRESS_KEY);
-      if (savedProgress) {
-        setProgressMap(JSON.parse(savedProgress));
-      }
-
-      // Saved photos overrides
-      const savedPhotos = localStorage.getItem(LOCAL_STORAGE_PHOTOS_KEY);
-      if (savedPhotos) {
-        setPhotos(JSON.parse(savedPhotos));
-      }
-    } catch {
-      // Ignore localstorage errors
-    }
-  }, []);
+  // Pesan singkat hilang otomatis
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
 
   // 2. Select & persist theme changes
   const handleSelectTheme = (newTheme: ThemeMode) => {
     setTheme(newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
-    try {
-      localStorage.setItem(LOCAL_STORAGE_THEME_KEY, newTheme);
-    } catch {
-      // Ignore
-    }
+    writeStorage(LOCAL_STORAGE_THEME_KEY, newTheme);
   };
 
   // 3. Select & persist mode changes
   const handleSelectGameMode = (mode: GameMode) => {
     setGameMode(mode);
-    try {
-      localStorage.setItem(LOCAL_STORAGE_MODE_KEY, mode);
-    } catch {
-      // Ignore
-    }
-  };
-
-  const handleToggleGameMode = () => {
-    setGameMode((prev) => {
-      const next = prev === 'relaxed' ? 'challenge' : 'relaxed';
-      try {
-        localStorage.setItem(LOCAL_STORAGE_MODE_KEY, next);
-      } catch {
-        // Ignore
-      }
-      return next;
-    });
+    writeStorage(LOCAL_STORAGE_MODE_KEY, mode);
   };
 
   // 4. Persist Mute Toggle
   const handleToggleMute = () => {
     const muted = soundManager.toggleMute();
     setIsMuted(muted);
+    writeStorage(LOCAL_STORAGE_MUTE_KEY, muted ? '1' : '0');
   };
 
   // 5. Update Level Progress
@@ -122,12 +129,14 @@ export default function App() {
     movesCount: number;
   }) => {
     setProgressMap((prev) => {
-      const existing = prev[activeLevelId];
-      const prevBest = existing?.bestTimeSeconds;
+      const prevBest = prev[activeLevelId]?.bestTimeSeconds ?? null;
 
-      let newBest = stats.timeSeconds;
-      if (prevBest && prevBest > 0) {
-        newBest = Math.min(prevBest, stats.timeSeconds);
+      // Mode Santai (waktu 0) tidak boleh menghapus rekor waktu
+      let newBest = prevBest;
+      if (stats.timeSeconds > 0) {
+        newBest = prevBest
+          ? Math.min(prevBest, stats.timeSeconds)
+          : stats.timeSeconds;
       }
 
       const updatedMap = {
@@ -141,120 +150,129 @@ export default function App() {
         },
       };
 
-      try {
-        localStorage.setItem(
-          LOCAL_STORAGE_PROGRESS_KEY,
-          JSON.stringify(updatedMap),
-        );
-      } catch {
-        // Ignore
-      }
-
+      writeStorage(LOCAL_STORAGE_PROGRESS_KEY, JSON.stringify(updatedMap));
       return updatedMap;
     });
   };
 
+  // Simpan foto; beri tahu pemain kalau penyimpanan penuh
+  const commitPhotos = (updated: Photo[], successMessage: string | null) => {
+    photosRef.current = updated;
+    setPhotos(updated);
+    const saved = writeStorage(
+      LOCAL_STORAGE_PHOTOS_KEY,
+      JSON.stringify(updated),
+    );
+    setNotice(
+      saved
+        ? successMessage
+        : 'Foto dipakai, tapi tidak bisa disimpan (memori penuh).',
+    );
+  };
+
   // 6. Reset to default procedural pixel art photos
-  const handleUseDefaultPhotos = () => {
+  const resetPhotos = () => {
+    photosRef.current = INITIAL_PHOTOS;
     setPhotos(INITIAL_PHOTOS);
-    try {
-      localStorage.removeItem(LOCAL_STORAGE_PHOTOS_KEY);
-    } catch (e) {
-      // Ignore
-      console.log(e);
+    writeStorage(LOCAL_STORAGE_PHOTOS_KEY, null);
+  };
+
+  const handleUseDefaultPhotos = () => {
+    if (photosRef.current.some((p) => p.isCustom)) {
+      setConfirmAction('defaultPhotos');
     }
+  };
+
+  // Siapkan game untuk pengunjung berikutnya
+  const handleNewPlayer = () => {
+    resetPhotos();
+    setProgressMap({});
+    writeStorage(LOCAL_STORAGE_PROGRESS_KEY, null);
+    handleSelectGameMode('relaxed');
+    setActiveLevelId(1);
+    setCurrentScreen('start');
+    setNotice('Siap untuk pemain baru!');
   };
 
   // 7. Batch upload custom photos (1 to 3 images)
   const handleUploadCustomPhotos = async (fileList: FileList) => {
-    const files = Array.from(fileList).slice(0, 3);
-    console.log(
-      `[handleUploadCustomPhotos] Starting upload batch for ${files.length} file(s)...`,
-    );
-    const urls = await Promise.all(
-      files.map((file) => processUploadedFile(file)),
-    );
+    const allFiles = Array.from(fileList);
+    const files = allFiles.slice(0, 3);
+    if (files.length === 0) return;
 
-    if (urls.length === 0) return;
+    let urls: string[];
+    try {
+      urls = await Promise.all(files.map((file) => processUploadedFile(file)));
+    } catch {
+      setNotice('Foto tidak bisa dibaca. Coba pilih file JPG atau PNG.');
+      return;
+    }
 
-    setPhotos((prev) => {
-      const updated = prev.map((photo, idx) => {
-        if (urls[idx]) {
-          return {
+    const updated = photosRef.current.map((photo, idx) =>
+      urls[idx]
+        ? {
             ...photo,
             url: urls[idx],
-            name: files[idx]?.name.replace(/\.[^/.]+$/, '') || photo.name,
+            name: files[idx].name.replace(/\.[^/.]+$/, '') || photo.name,
             isCustom: true,
-          };
-        }
-        return photo;
-      });
+          }
+        : photo,
+    );
 
-      console.log(
-        '[handleUploadCustomPhotos] Updated photos state:',
-        updated.map((p) => ({
-          id: p.id,
-          name: p.name,
-          isCustom: p.isCustom,
-          urlLength: p.url?.length,
-        })),
-      );
-
-      try {
-        localStorage.setItem(LOCAL_STORAGE_PHOTOS_KEY, JSON.stringify(updated));
-      } catch {
-        // Ignore
-      }
-
-      return updated;
-    });
+    const range = urls.length > 1 ? `Level 1-${urls.length}` : 'Level 1';
+    commitPhotos(
+      updated,
+      allFiles.length > 3
+        ? `Hanya 3 foto pertama yang dipakai (${range}).`
+        : `Foto dipasang di ${range}.`,
+    );
   };
 
   // 8. Upload / Replace single photo handler
-  const handleUploadPhoto = (photoId: string, newUrl: string) => {
-    setPhotos((prev) => {
-      const updated = prev.map((p) =>
-        p.id === photoId ? { ...p, url: newUrl, isCustom: true } : p,
-      );
-      try {
-        localStorage.setItem(LOCAL_STORAGE_PHOTOS_KEY, JSON.stringify(updated));
-      } catch {
-        // Ignore
-      }
-      return updated;
-    });
+  const handleUploadPhoto = (
+    photoId: string,
+    newUrl: string,
+    name?: string,
+    successMessage: string | null = 'Foto berhasil diganti.',
+  ) => {
+    const updated = photosRef.current.map((p) =>
+      p.id === photoId
+        ? { ...p, url: newUrl, name: name || p.name, isCustom: true }
+        : p,
+    );
+    commitPhotos(updated, successMessage);
   };
 
-  // 9. Add new custom photo
-  const handleAddNewPhoto = (newPhoto: Photo) => {
-    setPhotos((prev) => {
-      const updated = [...prev];
-      const targetIdx = updated.findIndex((p) => !p.isCustom);
-      if (targetIdx !== -1) {
-        updated[targetIdx] = {
-          ...newPhoto,
-          id: updated[targetIdx].id,
-          isCustom: true,
-        };
-      } else {
-        updated.push(newPhoto);
-      }
-      try {
-        localStorage.setItem(LOCAL_STORAGE_PHOTOS_KEY, JSON.stringify(updated));
-      } catch {
-        // Ignore
-      }
-      return updated;
-    });
-  };
-
-  // 10. Upload single photo for a specific level
+  // 9. Upload single photo for a specific level
   const handleUploadPhotoForLevel = async (levelId: number, file: File) => {
-    const url = await processUploadedFile(file);
-    if (!url) return;
-    const targetLevel = DEFAULT_LEVELS.find((l) => l.id === levelId);
-    const photoId = targetLevel ? targetLevel.photoId : `photo-${levelId}`;
-    handleUploadPhoto(photoId, url);
+    try {
+      const url = await processUploadedFile(file);
+      const targetLevel = DEFAULT_LEVELS.find((l) => l.id === levelId);
+      const photoId = targetLevel ? targetLevel.photoId : `photo-${levelId}`;
+      handleUploadPhoto(photoId, url);
+    } catch {
+      setNotice('Foto tidak bisa dibaca. Coba pilih file JPG atau PNG.');
+    }
+  };
+
+  // 10. Mulai level: buka kamera dulu, lalu main dengan foto tersebut
+  const startLevel = (levelId: number) => {
+    setCameraLevelId(levelId);
+  };
+
+  const playLevel = (levelId: number) => {
+    setCameraLevelId(null);
+    setActiveLevelId(levelId);
+    setCurrentScreen('gameplay');
+  };
+
+  const handleStartPhoto = (dataUrl: string) => {
+    if (cameraLevelId === null) return;
+    const level = DEFAULT_LEVELS.find((l) => l.id === cameraLevelId);
+    if (level) {
+      handleUploadPhoto(level.photoId, dataUrl, 'Foto Kamu', null);
+    }
+    playLevel(cameraLevelId);
   };
 
   // Active level config & photo
@@ -271,15 +289,11 @@ export default function App() {
       {currentScreen !== 'gameplay' && (
         <Navbar
           currentScreen={currentScreen}
-          gameMode={gameMode}
           theme={theme}
           isMuted={isMuted}
-          onToggleGameMode={handleToggleGameMode}
-          onSelectGameMode={handleSelectGameMode}
           onSelectTheme={handleSelectTheme}
           onToggleMute={handleToggleMute}
           onNavigateHome={() => setCurrentScreen('start')}
-          onOpenPhotoManager={() => setShowPhotoManager(true)}
         />
       )}
 
@@ -294,21 +308,16 @@ export default function App() {
         {currentScreen === 'start' && (
           <StartScreen
             gameMode={gameMode}
-            theme={theme}
             levels={DEFAULT_LEVELS}
             photos={photos}
             progressMap={progressMap}
-            onSelectLevel={(levelId) => {
-              setActiveLevelId(levelId);
-              setCurrentScreen('gameplay');
-            }}
+            onSelectLevel={startLevel}
             onOpenLevelSelect={() => setCurrentScreen('levelSelect')}
-            onToggleGameMode={handleToggleGameMode}
             onSelectGameMode={handleSelectGameMode}
-            onSelectTheme={handleSelectTheme}
             onUseDefaultPhotos={handleUseDefaultPhotos}
             onUploadCustomPhotos={handleUploadCustomPhotos}
             onUploadPhotoForLevel={handleUploadPhotoForLevel}
+            onNewPlayer={() => setConfirmAction('newPlayer')}
           />
         )}
 
@@ -317,10 +326,7 @@ export default function App() {
             levels={DEFAULT_LEVELS}
             photos={photos}
             progressMap={progressMap}
-            onSelectLevel={(levelId) => {
-              setActiveLevelId(levelId);
-              setCurrentScreen('gameplay');
-            }}
+            onSelectLevel={startLevel}
             onBack={() => setCurrentScreen('start')}
             onOpenPhotoManager={() => setShowPhotoManager(true)}
             onUploadPhotoForLevel={handleUploadPhotoForLevel}
@@ -333,27 +339,13 @@ export default function App() {
             level={activeLevel}
             photo={activePhoto}
             gameMode={gameMode}
+            bestTimeSeconds={progressMap[activeLevel.id]?.bestTimeSeconds ?? null}
             isMuted={isMuted}
             onToggleMute={handleToggleMute}
             onLevelComplete={handleLevelComplete}
             onNextLevel={() => {
               if (activeLevelId < DEFAULT_LEVELS.length) {
-                const nextId = activeLevelId + 1;
-                const nextLevelConfig = DEFAULT_LEVELS.find(
-                  (l) => l.id === nextId,
-                );
-                const nextPhotoConfig = nextLevelConfig
-                  ? getPhotoForLevel(nextLevelConfig, photos)
-                  : null;
-                if (
-                  nextLevelConfig?.requiresUpload &&
-                  !nextPhotoConfig?.isCustom
-                ) {
-                  setCurrentScreen('levelSelect');
-                } else {
-                  setActiveLevelId(nextId);
-                  setCurrentScreen('gameplay');
-                }
+                startLevel(activeLevelId + 1);
               } else {
                 setCurrentScreen('levelSelect');
               }
@@ -368,9 +360,50 @@ export default function App() {
         <PhotoManagerModal
           photos={photos}
           onUploadPhoto={handleUploadPhoto}
-          onAddNewPhoto={handleAddNewPhoto}
+          onError={setNotice}
           onClose={() => setShowPhotoManager(false)}
         />
+      )}
+
+      {/* Kamera sebelum mulai level */}
+      {cameraLevelId !== null && (
+        <CameraModal
+          autoUse
+          onCapturePhoto={handleStartPhoto}
+          onSkip={() => playLevel(cameraLevelId)}
+          onClose={() => setCameraLevelId(null)}
+        />
+      )}
+
+      {confirmAction && (
+        <ConfirmDialog
+          title={
+            confirmAction === 'newPlayer'
+              ? 'MULAI PEMAIN BARU?'
+              : 'PAKAI FOTO BAWAAN?'
+          }
+          message={
+            confirmAction === 'newPlayer'
+              ? 'Semua progres level dan foto buatan akan dihapus.'
+              : 'Semua foto buatan akan dihapus.'
+          }
+          confirmLabel="YA, HAPUS"
+          onCancel={() => setConfirmAction(null)}
+          onConfirm={() => {
+            if (confirmAction === 'newPlayer') handleNewPlayer();
+            else resetPhotos();
+            setConfirmAction(null);
+          }}
+        />
+      )}
+
+      {notice && (
+        <div
+          role="status"
+          className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[70] w-[min(92vw,26rem)] pixel-box px-4 py-3 text-center text-sm font-bold text-theme-title pointer-events-none"
+        >
+          {notice}
+        </div>
       )}
 
       {/* Cozy Footer (hidden during gameplay) */}

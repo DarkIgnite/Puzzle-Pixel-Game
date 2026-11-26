@@ -66,7 +66,7 @@ export async function processUploadedFile(file: File): Promise<string> {
         }
       };
 
-      img.onerror = () => resolve(dataUrl);
+      img.onerror = () => reject(new Error('File bukan gambar yang bisa dibaca'));
       img.src = dataUrl;
     };
 

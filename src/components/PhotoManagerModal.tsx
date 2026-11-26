@@ -1,7 +1,6 @@
 import {
   Camera,
   FolderOpen,
-  Image as ImageIcon,
   Upload,
   X,
 } from 'lucide-react';
@@ -13,15 +12,15 @@ import { CameraModal } from './CameraModal';
 
 interface PhotoManagerModalProps {
   photos: Photo[];
-  onUploadPhoto: (photoId: string, newUrl: string) => void;
-  onAddNewPhoto: (newPhoto: Photo) => void;
+  onUploadPhoto: (photoId: string, newUrl: string, name?: string) => void;
+  onError: (message: string) => void;
   onClose: () => void;
 }
 
 export const PhotoManagerModal: React.FC<PhotoManagerModalProps> = ({
   photos,
   onUploadPhoto,
-  onAddNewPhoto,
+  onError,
   onClose,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -40,20 +39,14 @@ export const PhotoManagerModal: React.FC<PhotoManagerModalProps> = ({
       const dataUrl = await processUploadedFile(file);
       soundManager.playClick();
       if (activeReplacingPhotoIdRef.current) {
-        onUploadPhoto(activeReplacingPhotoIdRef.current, dataUrl);
-      } else {
-        const newPhoto: Photo = {
-          id: `custom-photo-${Date.now()}`,
-          name: file.name.replace(/\.[^/.]+$/, ''),
-          description: 'Foto buatan sendiri',
-          url: dataUrl,
-          placeholderPath: `assets/photos/custom-${Date.now()}.jpg`,
-          isCustom: true,
-        };
-        onAddNewPhoto(newPhoto);
+        onUploadPhoto(
+          activeReplacingPhotoIdRef.current,
+          dataUrl,
+          file.name.replace(/\.[^/.]+$/, ''),
+        );
       }
-    } catch (err) {
-      console.error('Upload error:', err);
+    } catch {
+      onError('Foto tidak bisa dibaca. Coba pilih file JPG atau PNG.');
     }
     e.target.value = '';
   };
@@ -64,38 +57,16 @@ export const PhotoManagerModal: React.FC<PhotoManagerModalProps> = ({
     fileInputRef.current?.click();
   };
 
-  const triggerUploadNew = () => {
-    soundManager.playClick();
-    activeReplacingPhotoIdRef.current = null;
-    fileInputRef.current?.click();
-  };
-
   const openCameraForPhoto = (photoId: string) => {
     soundManager.playClick();
     setCameraTargetPhotoId(photoId);
     setShowCameraModal(true);
   };
 
-  const openCameraNew = () => {
-    soundManager.playClick();
-    setCameraTargetPhotoId(null);
-    setShowCameraModal(true);
-  };
-
   const handleCameraCapture = (dataUrl: string, fileName: string) => {
     setShowCameraModal(false);
     if (cameraTargetPhotoId) {
-      onUploadPhoto(cameraTargetPhotoId, dataUrl);
-    } else {
-      const newPhoto: Photo = {
-        id: `custom-photo-${Date.now()}`,
-        name: fileName,
-        description: 'Foto kamera',
-        url: dataUrl,
-        placeholderPath: `assets/photos/custom-${Date.now()}.jpg`,
-        isCustom: true,
-      };
-      onAddNewPhoto(newPhoto);
+      onUploadPhoto(cameraTargetPhotoId, dataUrl, fileName);
     }
   };
 
@@ -117,6 +88,7 @@ export const PhotoManagerModal: React.FC<PhotoManagerModalProps> = ({
             soundManager.playClick();
             onClose();
           }}
+          aria-label="Tutup"
           className="absolute top-4 right-4 pixel-btn-dark p-1 text-xs font-bold cursor-pointer"
         >
           <X className="w-4 h-4" />
@@ -133,13 +105,13 @@ export const PhotoManagerModal: React.FC<PhotoManagerModalProps> = ({
         </h2>
 
         <p className="text-xs text-theme-sub mb-4">
-          Ganti foto default dengan foto dari galeri atau langsung foto
-          menggunakan kamera HP/Laptop!
+          Pilih level, lalu ganti fotonya dari galeri atau langsung dari
+          kamera.
         </p>
 
         {/* Photos Grid */}
         <div className="flex-1 overflow-y-auto pr-1 grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-          {photos.map((photo) => (
+          {photos.map((photo, index) => (
             <div
               key={photo.id}
               className="pixel-box-inner p-2.5 flex items-center gap-3"
@@ -157,7 +129,7 @@ export const PhotoManagerModal: React.FC<PhotoManagerModalProps> = ({
                   {photo.name}
                 </h4>
                 <p className="text-[10px] text-theme-sub truncate mb-2">
-                  {photo.isCustom ? 'Custom Image' : photo.placeholderPath}
+                  Level {index + 1} • {photo.isCustom ? 'Foto kamu' : 'Foto bawaan'}
                 </p>
 
                 <div className="flex items-center gap-1.5">
@@ -186,32 +158,14 @@ export const PhotoManagerModal: React.FC<PhotoManagerModalProps> = ({
 
         {/* Footer Actions */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-3 border-t-2 border-theme-inner">
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <button
-              onClick={triggerUploadNew}
-              className="flex-1 sm:flex-none pixel-btn-green px-3 py-2 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <ImageIcon className="w-4 h-4" />
-              <span>UPLOAD BARU</span>
-            </button>
-
-            <button
-              onClick={openCameraNew}
-              className="flex-1 sm:flex-none pixel-btn-dark px-3 py-2 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <Camera className="w-4 h-4" />
-              <span>FOTO KAMERA</span>
-            </button>
-          </div>
-
           <button
             onClick={() => {
               soundManager.playClick();
               onClose();
             }}
-            className="w-full sm:w-auto pixel-btn px-5 py-2 text-xs font-bold cursor-pointer"
+            className="w-full sm:w-auto sm:ml-auto pixel-btn px-8 py-3 text-sm font-bold cursor-pointer"
           >
-            SELESAI & SIMPAN
+            SELESAI
           </button>
         </div>
       </div>

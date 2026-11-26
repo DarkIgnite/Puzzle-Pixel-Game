@@ -9,38 +9,35 @@ import {
   Play,
   RefreshCw,
   Upload,
+  UserPlus,
 } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { getPhotoForLevel } from '../data/photos';
 import {
   GameMode,
   LevelConfig,
   LevelProgress,
   Photo,
-  ThemeMode,
 } from '../types';
 import { soundManager } from '../utils/audio';
 import { CameraModal } from './CameraModal';
 
 interface StartScreenProps {
   gameMode: GameMode;
-  theme: ThemeMode;
   levels: LevelConfig[];
   photos: Photo[];
   progressMap?: Record<number, LevelProgress>;
   onSelectLevel: (levelId: number) => void;
   onOpenLevelSelect: () => void;
-  onToggleGameMode: () => void;
   onSelectGameMode: (mode: GameMode) => void;
-  onSelectTheme: (theme: ThemeMode) => void;
   onUseDefaultPhotos: () => void;
   onUploadCustomPhotos: (fileList: FileList) => void;
   onUploadPhotoForLevel: (levelId: number, file: File) => void;
+  onNewPlayer: () => void;
 }
 
 export const StartScreen: React.FC<StartScreenProps> = ({
   gameMode,
-  theme,
   levels,
   photos,
   progressMap = {},
@@ -50,11 +47,10 @@ export const StartScreen: React.FC<StartScreenProps> = ({
   onUseDefaultPhotos,
   onUploadCustomPhotos,
   onUploadPhotoForLevel,
+  onNewPlayer,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const levelFileInputRef = useRef<HTMLInputElement>(null);
-  const [showModeMenu, setShowModeMenu] = useState(false);
-  const modeMenuRef = useRef<HTMLDivElement>(null);
   const [uploadTargetLevelId, setUploadTargetLevelId] = useState<number | null>(
     null,
   );
@@ -82,23 +78,12 @@ export const StartScreen: React.FC<StartScreenProps> = ({
   if (startIdx + 3 > levels.length) startIdx = Math.max(0, levels.length - 3);
   const visibleLevels: LevelConfig[] = levels.slice(startIdx, startIdx + 3);
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        modeMenuRef.current &&
-        !modeMenuRef.current.contains(e.target as Node)
-      ) {
-        setShowModeMenu(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       soundManager.playSnap();
       onUploadCustomPhotos(e.target.files);
+      // Reset supaya file yang sama bisa dipilih lagi
+      e.target.value = '';
     }
   };
 
@@ -164,6 +149,25 @@ export const StartScreen: React.FC<StartScreenProps> = ({
     return !!photo?.isCustom;
   };
 
+  const hasProgress = completedIds.length > 0;
+  const hasCustomPhoto = photos.some((p) => p.isCustom);
+
+  // Level yang langsung dimainkan dari tombol utama
+  const nextLevel =
+    levels.find((l) => !safeProgressMap[l.id]?.completed) ?? levels[0];
+
+  const modeOptions = [
+    { value: 'relaxed' as GameMode, label: 'SANTAI', Icon: Coffee },
+    { value: 'challenge' as GameMode, label: 'TANTANGAN', Icon: Clock },
+  ];
+
+  const allDone = levels.every((l) => !!safeProgressMap[l.id]?.completed);
+  const startLabel = allDone
+    ? 'MAIN DARI LEVEL 1'
+    : hasProgress
+      ? `LANJUT LEVEL ${nextLevel.id}`
+      : 'MULAI MAIN';
+
   return (
     <div className="w-full max-w-4xl mx-auto px-3 py-6 flex flex-col items-center justify-center font-['Pixelify_Sans',sans-serif]">
       {/* Hidden File Input for bulk upload (levels 1-3) */}
@@ -190,118 +194,77 @@ export const StartScreen: React.FC<StartScreenProps> = ({
           COZY PIXEL PUZZLE
         </h1>
 
-        <p className="text-xs sm:text-sm text-theme-sub max-w-lg mb-6 leading-relaxed">
-          Geser dan susun potongan pixel art cozy di lantai kayu hangat. Bebas
-          dimainkan dengan sentuhan jari layar HP/Tablet atau mouse.
+        <p className="text-sm sm:text-base text-theme-sub max-w-lg mb-4 leading-relaxed">
+          Susun potongan gambar sampai utuh. Bisa pakai sentuhan jari atau
+          mouse.
         </p>
 
-        {/* Mode Selector */}
-        <div
-          ref={modeMenuRef}
-          className="w-full max-w-md pixel-box-inner p-3 mb-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-left relative"
+        {/* Tombol utama: sekali ketuk langsung main */}
+        <button
+          onClick={() => {
+            soundManager.playClick();
+            onSelectLevel(nextLevel.id);
+          }}
+          className="w-full max-w-md pixel-btn-green py-4 text-lg font-bold flex items-center justify-center gap-2 cursor-pointer mb-4"
         >
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 pixel-btn-dark text-theme-title">
-              {gameMode === 'relaxed' ? (
-                <Coffee className="w-4 h-4" />
-              ) : (
-                <Clock className="w-4 h-4" />
-              )}
-            </div>
-            <div>
-              <div className="font-bold text-xs text-theme-title">
-                MODE: {gameMode === 'relaxed' ? 'SANTAI' : 'TANTANGAN'}
-              </div>
-              <div className="text-[11px] text-theme-sub">
-                {gameMode === 'relaxed'
-                  ? 'Tanpa timer, main santai.'
-                  : 'Timer menghitung waktu terbaik.'}
-              </div>
-            </div>
+          <Play className="w-5 h-5 fill-current" />
+          <span>{startLabel}</span>
+        </button>
+
+        {/* Cara Main */}
+        <ol className="w-full max-w-md grid grid-cols-3 gap-2 mb-4">
+          {['Ambil fotomu lewat kamera', 'Ketuk atau tarik potongan ke kotak', 'Ada centang berarti benar'].map(
+            (text, i) => (
+              <li
+                key={text}
+                className="pixel-box-inner p-2 flex flex-col items-center gap-1 text-xs text-theme-sub leading-snug"
+              >
+                <span className="font-pixel-title text-sm text-theme-title">
+                  {i + 1}
+                </span>
+                {text}
+              </li>
+            ),
+          )}
+        </ol>
+
+        {/* Mode Selector */}
+        <div className="w-full max-w-md pixel-box-inner p-3 mb-4 text-left">
+          <div className="font-pixel-title text-[10px] text-theme-title mb-2">
+            MODE MAIN:
           </div>
-
-          <div className="relative w-full sm:w-auto">
-            <button
-              onClick={() => {
-                soundManager.playClick();
-                setShowModeMenu((prev) => !prev);
-              }}
-              className="pixel-btn-dark px-3 py-1.5 text-xs font-bold w-full sm:w-auto flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <span>PILIH MODE</span>
-              <Clock className="w-3.5 h-3.5" />
-            </button>
-
-            {/* Mode Dropdown Menu */}
-            {showModeMenu && (
-              <div className="absolute right-0 mt-2 w-56 pixel-box p-2 z-50 shadow-xl animate-in fade-in zoom-in-95 duration-100">
-                <div className="font-pixel-title text-[10px] text-theme-title px-2 py-1 border-b border-theme-inner mb-1.5 flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  PILIH MODE GAME:
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <button
-                    onClick={() => {
-                      soundManager.playClick();
-                      onSelectGameMode('relaxed');
-                      setShowModeMenu(false);
-                    }}
-                    className={`w-full p-2 text-left text-xs font-bold flex items-center justify-between border transition-all cursor-pointer ${
-                      gameMode === 'relaxed'
-                        ? 'pixel-box-inner border-theme-title text-theme-title'
-                        : 'border-transparent hover:bg-theme-inner text-theme-sub'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Coffee className="w-3.5 h-3.5 text-theme-title" />
-                      <div>
-                        <div className="leading-tight">MODE SANTAI</div>
-                        <div className="text-[10px] font-normal opacity-80">
-                          Tanpa timer
-                        </div>
-                      </div>
-                    </div>
-                    {gameMode === 'relaxed' && (
-                      <Check className="w-3.5 h-3.5 text-theme-title shrink-0" />
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      soundManager.playClick();
-                      onSelectGameMode('challenge');
-                      setShowModeMenu(false);
-                    }}
-                    className={`w-full p-2 text-left text-xs font-bold flex items-center justify-between border transition-all cursor-pointer ${
-                      gameMode === 'challenge'
-                        ? 'pixel-box-inner border-theme-title text-theme-title'
-                        : 'border-transparent hover:bg-theme-inner text-theme-sub'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-3.5 h-3.5 text-theme-title" />
-                      <div>
-                        <div className="leading-tight">MODE TANTANGAN</div>
-                        <div className="text-[10px] font-normal opacity-80">
-                          Timer aktif
-                        </div>
-                      </div>
-                    </div>
-                    {gameMode === 'challenge' && (
-                      <Check className="w-3.5 h-3.5 text-theme-title shrink-0" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
+          <div className="grid grid-cols-2 gap-2">
+            {modeOptions.map(({ value, label, Icon }) => (
+              <button
+                key={value}
+                aria-pressed={gameMode === value}
+                onClick={() => {
+                  soundManager.playClick();
+                  onSelectGameMode(value);
+                }}
+                className={`p-2.5 border-2 text-sm font-bold flex items-center justify-center gap-1.5 cursor-pointer ${
+                  gameMode === value
+                    ? 'pixel-btn-green'
+                    : 'border-theme-inner bg-theme-wall text-theme-sub'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span>{label}</span>
+                {gameMode === value && <Check className="w-4 h-4" />}
+              </button>
+            ))}
           </div>
+          <p className="text-xs text-theme-sub mt-2">
+            {gameMode === 'relaxed'
+              ? 'Tanpa waktu, ada gambar bayangan sebagai panduan.'
+              : 'Dihitung waktunya, tanpa gambar bayangan.'}
+          </p>
         </div>
 
         {/* Photo Source for levels 1-3 */}
         <div className="w-full max-w-md pixel-box-inner p-3 mb-2 text-left">
           <div className="font-pixel-title text-[10px] text-theme-title mb-2">
-            SUMBER FOTO PUZZLE:
+            FOTO PUZZLE (OPSIONAL):
           </div>
 
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
@@ -310,14 +273,14 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                 soundManager.playClick();
                 onUseDefaultPhotos();
               }}
-              className={`p-2 border-2 text-[11px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+              className={`p-2.5 border-2 text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${
                 !isUsingCustom
                   ? 'border-theme-title bg-theme-main text-theme-title'
                   : 'border-theme-inner bg-theme-wall text-theme-sub hover:bg-theme-main'
               }`}
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              <span>PIXEL</span>
+              <span>BAWAAN</span>
             </button>
 
             <button
@@ -325,39 +288,51 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                 soundManager.playClick();
                 fileInputRef.current?.click();
               }}
-              className={`p-2 border-2 text-[11px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+              className={`p-2.5 border-2 text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${
                 isUsingCustom
                   ? 'border-theme-title bg-theme-main text-theme-title'
                   : 'border-theme-inner bg-theme-wall text-theme-sub hover:bg-theme-main'
               }`}
             >
               <Upload className="w-3.5 h-3.5" />
-              <span>UPLOAD</span>
+              <span>GALERI</span>
             </button>
 
             <button
               onClick={() => openCameraForLevel()}
-              className="p-2 border-2 border-theme-inner bg-theme-wall text-theme-title hover:bg-theme-main text-[11px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
+              className="p-2 border-2 border-theme-inner bg-theme-wall text-theme-title hover:bg-theme-main text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
             >
               <Camera className="w-3.5 h-3.5" />
               <span>KAMERA</span>
             </button>
           </div>
 
-          {isUsingCustom && (
-            <div className="mt-2 text-[11px] flex items-center gap-1">
-              <Check className="w-3.5 h-3.5" />
-              <span>Menggunakan foto buatanmu sendiri!</span>
-            </div>
-          )}
+          <p className="mt-2 text-xs text-theme-sub">
+            {isUsingCustom
+              ? 'Foto buatanmu sedang dipakai.'
+              : 'Galeri: maks. 3 foto (Level 1-3). Kamera: Level 1.'}
+          </p>
         </div>
+
+        {(hasProgress || hasCustomPhoto) && (
+          <button
+            onClick={() => {
+              soundManager.playClick();
+              onNewPlayer();
+            }}
+            className="mt-3 pixel-btn-dark px-4 py-2.5 text-sm font-bold flex items-center gap-2 cursor-pointer"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>PEMAIN BARU</span>
+          </button>
+        )}
       </div>
 
       {/* 3 Level Cards Section */}
       <div className="w-full">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-3">
           <div className="font-pixel-title text-xs text-theme-title text-center sm:text-left">
-            PILIH LEVEL (1-TAP PLAY):
+            LEVEL:
           </div>
 
           <button
@@ -369,7 +344,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({
             title="Buka Halaman Pilih Semua Level"
           >
             <Grid className="w-3.5 h-3.5" />
-            <span>PILIH LEVEL</span>
+            <span>SEMUA LEVEL</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -462,20 +437,6 @@ export const StartScreen: React.FC<StartScreenProps> = ({
           })}
         </div>
 
-        {/* Bottom Banner Button to Level Select Page */}
-        <div className="mt-5 flex justify-center">
-          {/* <button
-            onClick={() => {
-              soundManager.playClick();
-              onOpenLevelSelect();
-            }}
-            className="w-full sm:w-auto pixel-btn px-6 py-2.5 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md hover:scale-105 transition-all"
-          >
-            <Grid className="w-4 h-4" />
-            <span>PILIH LEVEL (LIHAT SEMUA LEVEL)</span>
-            <ArrowRight className="w-4 h-4" />
-          </button> */}
-        </div>
       </div>
 
       {/* Camera Modal */}

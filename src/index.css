@@ -1,5 +1,45 @@
 @import "tailwindcss";
 
+/* Font disimpan lokal supaya tampilan tetap sama walau tanpa internet */
+@font-face {
+    font-family: "Pixelify Sans";
+    font-weight: 400;
+    font-display: swap;
+    src: url("/fonts/pixelify-sans-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Pixelify Sans";
+    font-weight: 500;
+    font-display: swap;
+    src: url("/fonts/pixelify-sans-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Pixelify Sans";
+    font-weight: 600;
+    font-display: swap;
+    src: url("/fonts/pixelify-sans-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Pixelify Sans";
+    font-weight: 700;
+    font-display: swap;
+    src: url("/fonts/pixelify-sans-latin-700-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Press Start 2P";
+    font-weight: 400;
+    font-display: swap;
+    src: url("/fonts/press-start-2p-latin-400-normal.woff2") format("woff2");
+}
+
+@theme inline {
+    --color-theme-accent: var(--color-accent);
+}
+
 :root,
 [data-theme="dark"] {
     --bg-main: #0a0e14;
@@ -20,8 +60,8 @@
     --box-inner-bg: #0f0a06;
     --box-inner-border: #2d1a0d;
 
-    --btn-main-bg: #c46e44;
-    --btn-main-hover: #d57e53;
+    --btn-main-bg: #a8552f;
+    --btn-main-hover: #9a4c29;
     --btn-main-border: #281a0e;
     --btn-main-shadow: #0d0703;
     --btn-main-text: #ffffff;
@@ -33,7 +73,7 @@
     --btn-dark-text: #ece3d4;
 
     --btn-green-bg: #6b7b43;
-    --btn-green-hover: #7c8f4f;
+    --btn-green-hover: #5d6b3a;
     --btn-green-border: #18220d;
     --btn-green-shadow: #0a0f05;
     --btn-green-text: #ffffff;
@@ -61,7 +101,7 @@
 
     --color-title: #5c3d2e;
     --color-sub: #5b311b;
-    --color-accent: #b2ccba;
+    --color-accent: #3f6b4d;
     --color-text-main: #3d2817;
 
     --box-bg: #fff9f2;
@@ -70,20 +110,20 @@
     --box-inner-bg: #f4ece1;
     --box-inner-border: #d5b9a4;
 
-    --btn-main-bg: #e07a5f;
-    --btn-main-hover: #f28f75;
+    --btn-main-bg: #b5523a;
+    --btn-main-hover: #a34731;
     --btn-main-border: #8c5e45;
     --btn-main-shadow: #5c3d2e;
     --btn-main-text: #ffffff;
 
     --btn-dark-bg: #8c6747;
-    --btn-dark-hover: #a07755;
+    --btn-dark-hover: #7a5a3e;
     --btn-dark-border: #5c3d2e;
     --btn-dark-shadow: #3d2817;
     --btn-dark-text: #fff9f2;
 
     --btn-green-bg: #4a7c59;
-    --btn-green-hover: #5f9e72;
+    --btn-green-hover: #3f6b4d;
     --btn-green-border: #2d4f38;
     --btn-green-shadow: #1e3626;
     --btn-green-text: #ffffff;
